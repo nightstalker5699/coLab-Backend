@@ -6,8 +6,12 @@ process.on("uncaughtException", (err) => {
 
 import dotenv from "dotenv";
 import app from "./app";
+import databaseSetup from "./helpers/databaseSetup";
+dotenv.config({ path: "./.env" });
 
-dotenv.config({ path: "./config.env" });
+databaseSetup(); // Set up the database
+
+// server creation
 const server = app.listen(process.env.PORT, () => {
   console.log(`App running on port ${process.env.PORT}`);
 });

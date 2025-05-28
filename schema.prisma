@@ -1,0 +1,39 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  email     String   @unique
+  password  String   
+  createdAt DateTime @default(now())
+  updatedPasswordAt DateTime? 
+
+//   teams     UserinTeam[] 
+}
+
+// model UserinTeam {
+//     id        Int      @id @default(autoincrement())
+//     userId    Int
+//     teamId    Int
+//     user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+//     team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+    
+//     createdAt DateTime @default(now())
+// }
+
+// model Team{
+//     id        Int      @id @default(autoincrement())
+//     name      String
+//     leaderId  Int
+//     leader    User     @relation(fields: [leaderId], references: [id],onDelete: Cascade)
+//     members   UserinTeam[]
+
+//     createdAt DateTime @default(now())
+// }
