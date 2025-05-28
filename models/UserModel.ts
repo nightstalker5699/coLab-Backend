@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { DecodedToken } from "../controllers/authController";
 import bcrypt from "bcrypt";
 const prisma = new PrismaClient();
 
@@ -23,21 +24,16 @@ export type Usertype = {
 };
 
 export class UserObject {
-  id: string;
-  email: string;
-  password: string;
-  name?: string;
-  createdAt: Date;
-  updatedAt?: Date | null;
+  user: Usertype;
   constructor(data: Usertype) {
-    this.id = data.id;
-    this.email = data.email;
-    this.password = data.password;
-    this.name = data.name;
-    this.createdAt = data.createdAt || new Date();
-    this.updatedAt = data.updatedPasswordAt;
+    this.user = data;
   }
   async comparePasswords(candidatePassword: string): Promise<boolean> {
-    return await bcrypt.compare(candidatePassword, this.password);
+    return await bcrypt.compare(candidatePassword, this.user.password);
+  }
+  compareDates(tokenDate: DecodedToken): boolean {
+    if (!this.user.updatedPasswordAt) return false;
+    const tokenDateString = new Date(tokenDate.iat! * 1000);
+    return this.user.updatedPasswordAt < tokenDateString;
   }
 }

@@ -10,7 +10,7 @@ export interface RequestWithUser extends Request {
   user?: UserObject;
 }
 
-interface DecodedToken extends jwt.JwtPayload {
+export interface DecodedToken extends jwt.JwtPayload {
   id: string;
 }
 
@@ -71,12 +71,12 @@ export const login = catchAsync(
     }
 
     // Check password
-    const user = new UserObject(found);
-    if (!(await user.comparePasswords(password))) {
+    const userObj = new UserObject(found);
+    if (!(await userObj.comparePasswords(password))) {
       return next(new appError("Incorrect password", 401));
     }
     // Sign tokens and send response
-    signTokens(user, res);
+    signTokens(userObj.user, res);
   }
 );
 
@@ -103,15 +103,14 @@ export const protect = catchAsync(
       return next(new appError("User not found", 404));
     }
     // Check if user changed password after the token was issued
-    if (cuurrentUser.updatedPasswordAt) {
-      const tokenIssuedAt = new Date(decoded.iat! * 1000);
-      if (cuurrentUser.updatedPasswordAt > tokenIssuedAt) {
-        return next(new appError("Password changed, please log in again", 401));
-      }
+    const userObj = new UserObject(cuurrentUser);
+    if (!userObj.compareDates(decoded)) {
+      return next(new appError("Password changed, please log in again", 401));
     }
+
     // Attach user to request object
 
-    req.user = new UserObject(cuurrentUser);
+    req.user = userObj;
     next();
   }
 );
