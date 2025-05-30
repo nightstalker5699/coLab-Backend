@@ -1,7 +1,6 @@
 import JWT, { Secret } from "jsonwebtoken";
-import { User, Usertype } from "../models/UserModel";
+import { UserObject } from "../types/userTypes";
 import { Request, Response } from "express";
-import { sign } from "crypto";
 const generateJWT = (userId: string): string => {
   return JWT.sign(
     { id: userId },
@@ -12,8 +11,8 @@ const generateJWT = (userId: string): string => {
   );
 };
 
-const signTokens = async (user: Usertype, res: Response) => {
-  const token = generateJWT(user.id);
+const signTokens = async (user: UserObject, res: Response) => {
+  const token = generateJWT(user.user.id);
   res.cookie("jwt", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

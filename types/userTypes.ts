@@ -1,24 +1,11 @@
-import { PrismaClient } from "@prisma/client";
-import { DecodedToken } from "../controllers/authController";
+import { DecodedToken } from "../types/generalTypes";
 import bcrypt from "bcrypt";
-const prisma = new PrismaClient();
-
-export const User = prisma.$extends({
-  query: {
-    user: {
-      async create({ model, args, operation, query }) {
-        args.data.password = await bcrypt.hash(args.data.password, 10);
-        return query(args);
-      },
-    },
-  },
-}).user;
 
 export type Usertype = {
   id: string;
   email: string;
   password: string;
-  name?: string;
+  name: string;
   createdAt?: Date;
   updatedPasswordAt?: Date | null;
 };
@@ -37,3 +24,14 @@ export class UserObject {
     return this.user.updatedPasswordAt < tokenDateString;
   }
 }
+
+export type createUserType = {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword?: string;
+};
+export type loginUserType = {
+  email: string;
+  password: string;
+};
