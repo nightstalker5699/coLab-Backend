@@ -1,0 +1,233 @@
+/api/users/me:
+  get:
+    summary: Get current user profile
+    description: Retrieves the profile information of the currently authenticated user
+    tags:
+      - User Management
+    security:
+      - bearerAuth: []
+    responses:
+      "200":
+        description: User profile retrieved successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: "success"
+                data:
+                  type: object
+                  properties:
+                    user:
+                      $ref: "#/components/schemas/User"
+      "401":
+        $ref: "#/components/responses/UnauthorizedError"
+      "404":
+        $ref: "#/components/responses/NotFoundError"
+
+  patch:
+    summary: Update current user profile
+    description: Updates the profile information of the currently authenticated user
+    tags:
+      - User Management
+    security:
+      - bearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+                example: "new_username"
+              email:
+                type: string
+                format: email
+                example: "newemail@example.com"
+              newPassword:
+                type: string
+                description: New password for the user
+                example: "newpassword123"
+              oldPassword:
+                type: string
+                description: Current password (required when changing password)
+                example: "oldpassword123"
+    responses:
+      "200":
+        description: User profile updated successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: "success"
+                data:
+                  type: object
+                  properties:
+                    user:
+                      $ref: "#/components/schemas/User"
+      "400":
+        $ref: "#/components/responses/ValidationError"
+      "401":
+        $ref: "#/components/responses/UnauthorizedError"
+
+  delete:
+    summary: Delete current user account
+    description: Soft deletes the currently authenticated user's account
+    tags:
+      - User Management
+    security:
+      - bearerAuth: []
+    responses:
+      "204":
+        description: User account deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SuccessResponse"
+            example:
+              status: "success"
+              data: null
+      "401":
+        $ref: "#/components/responses/UnauthorizedError"
+
+/api/users/{username}:
+  get:
+    summary: Get user by username
+    description: Retrieves user information by username
+    tags:
+      - User Management
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: username
+        in: path
+        required: true
+        description: Username of the user to retrieve
+        schema:
+          type: string
+          example: "john_doe"
+    responses:
+      "200":
+        description: User information retrieved successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: "success"
+                data:
+                  type: object
+                  properties:
+                    user:
+                      $ref: "#/components/schemas/User"
+      "400":
+        $ref: "#/components/responses/ValidationError"
+      "401":
+        $ref: "#/components/responses/UnauthorizedError"
+      "404":
+        $ref: "#/components/responses/NotFoundError"
+
+  patch:
+    summary: Update user by username (Admin only)
+    description: Updates user information by username. Requires admin privileges and valid JWT token.
+    tags:
+      - User Management
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: username
+        in: path
+        required: true
+        description: Username of the user to update
+        schema:
+          type: string
+          example: "john_doe"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+                example: "new_username"
+              email:
+                type: string
+                format: email
+                example: "newemail@example.com"
+              role:
+                type: string
+                enum: ["USER", "ADMIN"]
+                example: "USER"
+              newPassword:
+                type: string
+                description: New password for the user
+                example: "newpassword123"
+    responses:
+      "200":
+        description: User updated successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: "success"
+                data:
+                  type: object
+                  properties:
+                    user:
+                      $ref: "#/components/schemas/User"
+      "400":
+        $ref: "#/components/responses/ValidationError"
+      "401":
+        $ref: "#/components/responses/UnauthorizedError"
+      "403":
+        $ref: "#/components/responses/ForbiddenError"
+      "404":
+        $ref: "#/components/responses/NotFoundError"
+
+  delete:
+    summary: Delete user by username (Admin only)
+    description: Soft deletes a user by username. Requires admin privileges and valid JWT token.
+    tags:
+      - User Management
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: username
+        in: path
+        required: true
+        description: Username of the user to delete
+        schema:
+          type: string
+          example: "john_doe"
+    responses:
+      "204":
+        description: User deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SuccessResponse"
+            example:
+              status: "success"
+              data: null
+      "400":
+        $ref: "#/components/responses/ValidationError"
+      "401":
+        $ref: "#/components/responses/UnauthorizedError"
+      "403":
+        $ref: "#/components/responses/ForbiddenError"
+      "404":
+        $ref: "#/components/responses/NotFoundError"

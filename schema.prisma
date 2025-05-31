@@ -9,31 +9,134 @@ generator client {
 
 model User {
   id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name      String
-  email     String   @unique
-  password  String   
+  username      String @unique @db.VarChar(25)
+  email     String   @unique @db.VarChar(50)
+  password  String   @db.VarChar(255)
   createdAt DateTime @default(now())
-  updatedPasswordAt DateTime? 
+  updatedPasswordAt DateTime?
+  photo    String? @db.VarChar(60)
+  isdeleted Boolean  @default(false)
+  role      SystemRole @default(SYSTEMUSER)
+  resetToken ResetCode[]
+  userInTeams UserInTeam[]
 
-//   teams     UserinTeam[] 
+  @@map("users")
 }
 
-// model UserinTeam {
-//     id        Int      @id @default(autoincrement())
-//     userId    Int
-//     teamId    Int
-//     user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-//     team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-    
-//     createdAt DateTime @default(now())
-// }
+model ResetCode {
+  id       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @db.Uuid
+  code      String   @db.VarChar(8)
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId], name: "reset_code_user_index")
+  @@map("reset_codes")
+}
 
-// model Team{
-//     id        Int      @id @default(autoincrement())
-//     name      String
-//     leaderId  Int
-//     leader    User     @relation(fields: [leaderId], references: [id],onDelete: Cascade)
-//     members   UserinTeam[]
+model Team {
+  id       String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teamName  String @unique @db.VarChar(25)
+  teamLogo String? @db.VarChar(30)
+  createdAt DateTime   @default(now())
+  theme     String?   @db.VarChar(20)
+  joinCode String?     @unique @db.VarChar(12)
+  teamIsActive Boolean  @default(true)
+  userInTeams UserInTeam[]
+  events    Event[]
 
-//     createdAt DateTime @default(now())
-// }
+  @@map("teams")
+}
+
+
+model UserInTeam {
+  id       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String @db.Uuid 
+  teamId    String @db.Uuid
+  role      Role   @default(MEMBER)
+  joinedAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id],onDelete: Cascade)
+  team      Team     @relation(fields: [teamId], references: [id] , onDelete: Cascade)
+  taskAssigned UserTask[]
+  comments Comment[]
+  @@unique([userId, teamId])
+  @@index([userId])
+  @@index([teamId])
+  @@map("user_in_teams")
+}
+
+model Event {
+  id      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventName String @db.VarChar(50)
+  eventDescription String @db.VarChar(255)
+  eventDeadline DateTime 
+  eventStatus Status @default(ASSIGNED)
+  createdAt DateTime @default(now())
+  teamId    String @db.Uuid 
+  team      Team     @relation(fields: [teamId], references: [id],onDelete: Cascade)
+  tasks    Task[]
+  @@map("events")
+  @@index([teamId], name: "event_team_index")
+}
+
+model Task {
+  id      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  taskName String  @db.VarChar(50)
+  taskDescription String @db.VarChar(255)
+  taskDeadline DateTime
+  attachedFile String? @db.VarChar(60)
+  taskStatus Status @default(ASSIGNED)
+  taskPriority Priority @default(MEDIUM)
+  createdAt DateTime @default(now())
+  eventId  String @db.Uuid
+  event    Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userTasks UserTask[]
+  comments Comment[]
+  @@index([eventId], name: "task_event_index")
+
+  @@map("tasks")
+}
+
+model UserTask {
+  id      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  memberId    String @db.Uuid
+  taskId    String @db.Uuid
+  assignedAt DateTime @default(now())
+  userInTeam      UserInTeam     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  @@unique([memberId, taskId])
+  @@index([memberId], name: "user_task_member_index")
+  @@map("user_tasks")
+}
+
+model Comment {
+  id      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  content String @db.VarChar(255)
+  createdAt DateTime @default(now())
+  attachedFile String? @db.VarChar(60)
+  userId    String @db.Uuid
+  taskId    String @db.Uuid
+  user      UserInTeam     @relation(fields: [userId], references: [id],onDelete: Cascade)
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  @@map("comments")
+}
+
+enum Role {
+  LEADER
+  MEMBER
+}
+enum SystemRole {
+  SYSTEMUSER
+  ADMIN
+}
+enum Status {
+  ASSIGNED
+  IN_PROGRESS
+  REJECTED
+  APPROVED
+  COMPLETED
+}
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}

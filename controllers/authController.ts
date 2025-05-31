@@ -2,12 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { catchReqAsync } from "../helpers/catchAsync";
 import appError from "../helpers/appError";
 import AuthService from "../services/auth.service";
-import {
-  UserObject,
-  Usertype,
-  createUserType,
-  loginUserType,
-} from "../types/userTypes";
+import { UserObject, createUserType, loginUserType } from "../types/userTypes";
 import { RequestWithUser, DecodedToken } from "../types/generalTypes";
 import signTokens from "../helpers/jwtToken";
 import jwt from "jsonwebtoken";
@@ -20,7 +15,7 @@ import jwt from "jsonwebtoken";
 export const signup = catchReqAsync(
   async (req: RequestWithUser, res: Response, next: NextFunction) => {
     const userData: createUserType = req.body;
-    const { email, password } = userData;
+    const { email, password, username } = userData;
     // Validate email format
     if (!email || !email.includes("@"))
       throw new appError("Valid email is required", 400, "ValidationError");
@@ -32,6 +27,13 @@ export const signup = catchReqAsync(
         400,
         "ValidationError"
       );
+    if (!username || username.length === 0 || username.includes(" ")) {
+      throw new appError(
+        "Username is required and cannot contain spaces",
+        400,
+        "ValidationError"
+      );
+    }
 
     const newUser = await AuthService.signup(userData);
     signTokens(newUser, res);

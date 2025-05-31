@@ -24,7 +24,7 @@ const signTokens = async (user: UserObject, res: Response) => {
     status: "success",
     token,
     data: {
-      user,
+      user: user.user,
     },
   });
 };

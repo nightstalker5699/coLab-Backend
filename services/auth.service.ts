@@ -1,10 +1,6 @@
-import { PrismaClient, User } from "@prisma/client";
-import {
-  Usertype,
-  UserObject,
-  createUserType,
-  loginUserType,
-} from "../types/userTypes";
+import { PrismaClient, User as userType } from "@prisma/client";
+import { UserObject, createUserType, loginUserType } from "../types/userTypes";
+import UserService from "./user.service";
 import appError from "../helpers/appError";
 const User = new PrismaClient().user;
 import bcrypt from "bcrypt";
@@ -26,12 +22,20 @@ import bcrypt from "bcrypt";
 export default class AuthService {
   static async signup(userData: createUserType): Promise<UserObject> {
     // Check if user already exists
-    const existingUser = await User.findUnique({
-      where: { email: userData.email },
-    });
-    if (existingUser) {
+
+    if (await UserService.checkUsed({ where: { email: userData.email } })) {
       throw new appError(
         "User already exists with this email",
+        400,
+        "ValidationError"
+      );
+    }
+
+    if (
+      await UserService.checkUsed({ where: { username: userData.username } })
+    ) {
+      throw new appError(
+        "User already exists with this username",
         400,
         "ValidationError"
       );
@@ -47,7 +51,7 @@ export default class AuthService {
   }
   static async login(userData: loginUserType): Promise<UserObject> {
     // Check if user exists
-    const found: Usertype | null = await User.findUnique({
+    const found: userType | null = await User.findUnique({
       where: { email: userData.email },
     });
 
