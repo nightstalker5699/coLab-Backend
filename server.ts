@@ -14,6 +14,7 @@ databaseSetup(); // Set up the database
 // server creation
 const server = app.listen(process.env.PORT, () => {
   console.log(`App running on port ${process.env.PORT}`);
+  console.log("API Documentation available at http://localhost:8000/api-docs");
 });
 
 process.on("unhandledRejection", (err) => {
