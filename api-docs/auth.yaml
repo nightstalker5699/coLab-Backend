@@ -1,7 +1,9 @@
 /api/login:
   post:
     summary: User login authentication
-    description: Authenticates a user with email and password credentials and returns a JWT token
+    description: |
+      Authenticates a user with email and password credentials using Passport local strategy.
+      Creates a session and redirects to the frontend application.
     tags:
       - Authentication
     security: [] # This endpoint doesn't require authentication
@@ -26,32 +28,19 @@
                 description: User's password
                 example: "bomb5699"
     responses:
-      "200":
-        description: Login successful
-        content:
-          application/json:
+      "302":
+        description: Login successful - Redirect to frontend
+        headers:
+          Location:
             schema:
-              type: object
-              properties:
-                success:
-                  type: boolean
-                  example: true
-                message:
-                  type: string
-                  example: "Login successful"
-                token:
-                  type: string
-                  description: JWT authentication token
-                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                user:
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                      example: "user123"
-                    email:
-                      type: string
-                      example: "mohdghosam@gmail.com"
+              type: string
+              example: "http://localhost:3000"
+            description: Redirects to FRONTEND_URL environment variable or localhost:3000
+          Set-Cookie:
+            schema:
+              type: string
+              example: "connect.sid=s%3A...; Path=/; HttpOnly"
+            description: Session cookie set by Passport
       "400":
         description: Bad request - Invalid input
         content:
@@ -91,6 +80,15 @@
                 message:
                   type: string
                   example: "Internal server error"
+
+# Security Schemes
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: connect.sid
+      description: Session-based authentication using Passport.js
 
 /api/signup:
   post:
@@ -181,3 +179,278 @@
                 message:
                   type: string
                   example: "User already exists"
+
+/api/logout:
+  post:
+    summary: User logout
+    description: |
+      Logs out the authenticated user by destroying the session.
+      Requires an active session (user must be logged in).
+    tags:
+      - Authentication
+    security:
+      - cookieAuth: []
+    responses:
+      "200":
+        description: Logout successful
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: "Logged out successfully"
+        headers:
+          Set-Cookie:
+            schema:
+              type: string
+              example: "connect.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"
+            description: Session cookie cleared
+      "401":
+        description: Unauthorized - Invalid or missing token
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Unauthorized access"
+      "500":
+        description: Internal server error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Internal server error"
+
+/api/login/google:
+  get:
+    summary: Initiate Google OAuth authentication
+    description: |
+      Redirects user to Google's OAuth consent screen for authentication.
+
+      **Note:** This endpoint cannot be tested in Swagger UI due to OAuth redirect flow.
+      Test by navigating directly to: `GET /api/login/google` in your browser.
+
+      **Frontend Usage:**
+      ```javascript
+      // Don't use fetch() for OAuth
+      window.location.href = '/api/login/google';
+      ```
+    tags:
+      - Authentication
+    security: [] # This endpoint doesn't require authentication
+    responses:
+      "302":
+        description: Redirect to Google OAuth consent screen
+        headers:
+          Location:
+            schema:
+              type: string
+              example: "https://accounts.google.com/oauth/authorize?client_id=..."
+      "500":
+        description: Internal server error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Failed to initiate Google authentication"
+
+/api/login/google/redirect:
+  get:
+    summary: Google OAuth callback
+    description: Handles the callback from Google OAuth and completes the authentication process
+    tags:
+      - Authentication
+    security: [] # This endpoint doesn't require authentication
+    parameters:
+      - name: code
+        in: query
+        required: true
+        description: Authorization code from Google OAuth
+        schema:
+          type: string
+          example: "4/0AX4XfWjYXXXXXXXXXXXXXXXXXXXX"
+      - name: state
+        in: query
+        required: false
+        description: State parameter for CSRF protection
+        schema:
+          type: string
+    responses:
+      "302":
+        description: Google OAuth authentication successful - Redirect to frontend
+        headers:
+          Location:
+            schema:
+              type: string
+              example: "http://localhost:3000"
+            description: Redirects to FRONTEND_URL environment variable or localhost:3000
+      "400":
+        description: Bad request - Invalid or missing authorization code
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Invalid authorization code"
+      "401":
+        description: Authentication failed
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Google authentication failed"
+      "500":
+        description: Internal server error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Internal server error"
+
+/api/login/github:
+  get:
+    summary: Initiate GitHub OAuth authentication
+    description: |
+      Redirects user to GitHub's OAuth consent screen for authentication.
+
+      **Note:** This endpoint cannot be tested in Swagger UI due to OAuth redirect flow.
+      Test by navigating directly to: `GET /api/login/github` in your browser.
+
+      **Frontend Usage:**
+      ```javascript
+      // Don't use fetch() for OAuth
+      window.location.href = '/api/login/github';
+      ```
+    tags:
+      - Authentication
+    security: [] # This endpoint doesn't require authentication
+    responses:
+      "302":
+        description: Redirect to GitHub OAuth consent screen
+        headers:
+          Location:
+            schema:
+              type: string
+              example: "https://github.com/login/oauth/authorize?client_id=..."
+      "500":
+        description: Internal server error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Failed to initiate GitHub authentication"
+
+/api/login/github/redirect:
+  get:
+    summary: GitHub OAuth callback
+    description: Handles the callback from GitHub OAuth and completes the authentication process
+    tags:
+      - Authentication
+    security: [] # This endpoint doesn't require authentication
+    parameters:
+      - name: code
+        in: query
+        required: true
+        description: Authorization code from GitHub OAuth
+        schema:
+          type: string
+          example: "a1b2c3d4e5f6g7h8i9j0"
+      - name: state
+        in: query
+        required: false
+        description: State parameter for CSRF protection
+        schema:
+          type: string
+    responses:
+      "302":
+        description: GitHub OAuth authentication successful - Redirect to frontend
+        headers:
+          Location:
+            schema:
+              type: string
+              example: "http://localhost:3000"
+            description: Redirects to FRONTEND_URL environment variable or localhost:3000
+      "400":
+        description: Bad request - Invalid or missing authorization code
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Invalid authorization code"
+      "401":
+        description: Authentication failed
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "GitHub authentication failed"
+      "500":
+        description: Internal server error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Internal server error"

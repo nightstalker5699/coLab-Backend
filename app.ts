@@ -6,11 +6,12 @@ import morgan from "morgan";
 import authRouter from "./routes/AuthRouter";
 import cookieParser from "cookie-parser";
 import Session from "express-session";
-// import UserRouter from "./routes/UserRouter";
+import UserRouter from "./routes/UserRouter";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./swagger";
 import passport from "./helpers/authhandler";
 import { log } from "console";
+import { validateSession } from "./middlewares/protectRoute";
 const app = express();
 
 app.use(morgan("dev")); // Logging middleware
@@ -46,8 +47,8 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session()); // Initialize passport session
 app.use(cookieParser());
-
-// app.use("/api/users", UserRouter);
+app.use(validateSession); // Middleware to validate user session
+app.use("/api/users", UserRouter);
 app.use("/api", authRouter);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use((error: any, req: Request, res: Response, next: NextFunction) => {

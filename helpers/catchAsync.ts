@@ -1,11 +1,34 @@
 import { Request, Response, NextFunction } from "express";
 import passport from "./authhandler";
 import { User as userType } from "@prisma/client";
+import { Profile } from "passport-google-oauth20";
 export function catchReqAsync(
   fn: (req: Request, res: Response, next: NextFunction) => any
 ) {
   return (req: Request, res: Response, next: NextFunction) => {
     fn(req, res, next).catch((error: Error) => next(error));
+  };
+}
+
+export function catchAuthAsync(
+  fn: (
+    req: Request,
+    accessToken: any,
+    refreshToken: any,
+    profile: Profile,
+    done: any
+  ) => any
+) {
+  return (
+    req: Request,
+    accessToken: any,
+    refreshToken: any,
+    profile: Profile,
+    done: any
+  ) => {
+    fn(req, accessToken, refreshToken, profile, done).catch((error: Error) => {
+      done(error);
+    });
   };
 }
 

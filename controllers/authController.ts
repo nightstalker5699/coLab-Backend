@@ -3,7 +3,9 @@ import { catchReqAsync, loginAsync } from "../helpers/catchAsync";
 import appError from "../helpers/appError";
 import AuthService from "../services/auth.service";
 import { createUserType, loginUserType } from "../types/userTypes";
-
+import { Strategy as githubStrategy } from "passport-github2";
+import { Strategy as googleStrategy } from "passport-google-oauth20";
+import { Strategy as localStrategy } from "passport-local";
 /**
  * @desc User signup controller
  * @route POST /api/signup
@@ -44,20 +46,45 @@ export const signup = catchReqAsync(
   }
 );
 
-// /**
-//  * @desc User login controller
-//  * @route POST /api/login
-//  * @access Public
-//  */
+export const githubSignin = new githubStrategy(
+  {
+    clientID: process.env.GITHUB_CLIENT_ID || "",
+    clientSecret: process.env.GITHUB_CLIENT_SECRET || "",
+    callbackURL: process.env.GITHUB_REDIRECT_URI || "",
+    passReqToCallback: true,
+  },
+  AuthService.githubLogin
+);
 
-// export const login = catchReqAsync(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     const userData: loginUserType = req.body;
-//     if (!userData.email || !userData.password) {
-//       return next(new appError("Email and password are required", 400));
-//     }
-//     const userObj: UserObject = await AuthService.login(userData);
-//     // Sign tokens and send response
-//     signTokens(userObj, res);
-//   }
-// );
+export const googleSignin = new googleStrategy(
+  {
+    clientID: process.env.GOOGLE_CLIENT_ID || "",
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+    callbackURL: process.env.GOOGLE_REDIRECT_URI || "",
+    passReqToCallback: true,
+  },
+  AuthService.googleLogin
+);
+
+export const localSignin = new localStrategy(
+  {
+    usernameField: "identifier",
+    passwordField: "password",
+    passReqToCallback: true,
+  },
+  AuthService.localLogin
+);
+
+export const logout = catchReqAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    req.logout((err) => {
+      if (err) {
+        return next(new appError("Logout failed", 500, "ServerError"));
+      }
+      res.status(200).json({
+        status: "success",
+        message: "Logged out successfully",
+      });
+    });
+  }
+);

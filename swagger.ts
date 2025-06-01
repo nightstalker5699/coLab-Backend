@@ -14,8 +14,20 @@ const options: swaggerJSDoc.Options = {
         bearerAuth: {
           type: "http",
           scheme: "bearer",
-          bearerFormat: "JWT",
-          description: "Enter JWT Bearer token in the format: Bearer <token>",
+          description:
+            "Enter Bearer token obtained from Passport authentication",
+        },
+        cookieAuth: {
+          type: "apiKey",
+          in: "cookie",
+          name: "connect.sid",
+          description: "Session cookie for Passport authentication",
+        },
+        sessionAuth: {
+          type: "apiKey",
+          in: "header",
+          name: "Authorization",
+          description: "Session-based authentication via Passport",
         },
       },
       schemas: {
@@ -56,6 +68,21 @@ const options: swaggerJSDoc.Options = {
             },
           },
         },
+        LoginCredentials: {
+          type: "object",
+          required: ["username", "password"],
+          properties: {
+            username: {
+              type: "string",
+              example: "john_doe",
+            },
+            password: {
+              type: "string",
+              format: "password",
+              example: "password123",
+            },
+          },
+        },
         ErrorResponse: {
           type: "object",
           properties: {
@@ -84,7 +111,7 @@ const options: swaggerJSDoc.Options = {
       },
       responses: {
         UnauthorizedError: {
-          description: "Unauthorized - Invalid or missing JWT token",
+          description: "Unauthorized - Authentication required",
           content: {
             "application/json": {
               schema: {
@@ -92,7 +119,7 @@ const options: swaggerJSDoc.Options = {
               },
               example: {
                 status: "error",
-                message: "Unauthorized access",
+                message: "Authentication required",
               },
             },
           },
@@ -144,15 +171,12 @@ const options: swaggerJSDoc.Options = {
     tags: [
       {
         name: "Authentication",
-        description: "User authentication and authorization endpoints",
+        description:
+          "User authentication and authorization endpoints using Passport",
       },
       {
         name: "User Management",
         description: "User profile and account management endpoints",
-      },
-      {
-        name: "Admin",
-        description: "Administrative endpoints (requires admin privileges)",
       },
     ],
   },
