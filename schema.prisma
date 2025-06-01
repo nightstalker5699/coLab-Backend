@@ -11,9 +11,7 @@ model User {
   id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   username      String @unique @db.VarChar(25)
   email     String   @unique @db.VarChar(50)
-  password  String?   @db.VarChar(255)
-  googleId String? @unique @db.VarChar(255)
-  githubId String? @unique @db.VarChar(255)
+  password  String   @db.VarChar(255)
   createdAt DateTime @default(now())
   updatedPasswordAt DateTime?
   photo    String? @db.VarChar(60)

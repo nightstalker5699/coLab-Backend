@@ -1,10 +1,9 @@
 import { PrismaClient, User as userType } from "@prisma/client";
-import { createUserType, loginUserType } from "../types/userTypes";
+import { UserObject, createUserType, loginUserType } from "../types/userTypes";
 import UserService from "./user.service";
 import appError from "../helpers/appError";
 const User = new PrismaClient().user;
 import bcrypt from "bcrypt";
-import { checkEncryption } from "../helpers/checkEncryption";
 /**
  * @desc AuthService for handling user authentication
  * @class AuthService
@@ -21,7 +20,7 @@ import { checkEncryption } from "../helpers/checkEncryption";
  * */
 
 export default class AuthService {
-  static async signup(userData: createUserType): Promise<userType> {
+  static async signup(userData: createUserType): Promise<UserObject> {
     // Check if user already exists
 
     if (await UserService.checkUsed({ where: { email: userData.email } })) {
@@ -44,28 +43,28 @@ export default class AuthService {
 
     userData.password = await bcrypt.hash(userData.password, 12);
     // Create new user
-    const user: userType = await User.create({
+    const user = await User.create({
       data: userData,
     });
 
-    return user;
+    return new UserObject(user);
   }
-  static async localLogin(userData: loginUserType): Promise<userType> {
+  static async login(userData: loginUserType): Promise<UserObject> {
     // Check if user exists
-    const user: userType | null = await User.findUnique({
+    const found: userType | null = await User.findUnique({
       where: { email: userData.email },
     });
 
-    if (!user) {
+    if (!found) {
       throw new appError("Invalid Email or password", 401, "ValidationError");
     }
 
     // Check password
-
-    if (!(await checkEncryption(userData.password, user.password as string))) {
+    const userObj = new UserObject(found);
+    if (!(await userObj.comparePasswords(userData.password))) {
       throw new appError("Invalid Email or password", 401, "ValidationError");
     }
 
-    return user;
+    return userObj;
   }
 }
