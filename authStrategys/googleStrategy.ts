@@ -25,6 +25,14 @@ const googleVerify = async (
       where: { email: profile.emails[0].value },
     });
     if (user) {
+      if (!user.googleId) {
+        await User.update({
+          where: { id: user.id },
+          data: {
+            googleId: profile.id,
+          },
+        });
+      }
       return done(null, user);
     } else {
       profile.username = profile.displayName.replace(/\s+/g, "-");
@@ -33,6 +41,7 @@ const googleVerify = async (
           username: profile.displayName,
           email: profile.emails[0].value,
           googleId: profile.id,
+          photo: profile.photos[0].value,
         },
       });
       return done(null, newUser);

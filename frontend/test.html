@@ -123,12 +123,24 @@
       .btn-google {
         background: #db4437;
         color: white;
+        margin-bottom: 15px;
       }
 
       .btn-google:hover {
         background: #c23321;
         transform: translateY(-2px);
         box-shadow: 0 10px 20px rgba(219, 68, 55, 0.3);
+      }
+
+      .btn-github {
+        background: #333;
+        color: white;
+      }
+
+      .btn-github:hover {
+        background: #24292e;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(51, 51, 51, 0.3);
       }
 
       .btn-secondary {
@@ -262,6 +274,12 @@
         background: #dc3545;
       }
 
+      .oauth-section {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+
       @media (max-width: 600px) {
         .container {
           padding: 20px;
@@ -336,12 +354,17 @@
         </form>
       </div>
 
-      <!-- Google Login -->
+      <!-- OAuth Login -->
       <div class="auth-section">
-        <h2>🌐 Google Authentication</h2>
-        <button type="button" onclick="googleLogin()" class="btn-google">
-          Login with Google
-        </button>
+        <h2>🌐 OAuth Authentication</h2>
+        <div class="oauth-section">
+          <button type="button" onclick="googleLogin()" class="btn-google">
+            Login with Google
+          </button>
+          <button type="button" onclick="githubLogin()" class="btn-github">
+            Login with GitHub
+          </button>
+        </div>
       </div>
 
       <!-- User Actions -->
@@ -566,6 +589,11 @@
         window.location.href = `${backendUrl}/api/login/google`;
       }
 
+      // GitHub login
+      function githubLogin() {
+        window.location.href = `${backendUrl}/api/login/github`;
+      }
+
       // Get user profile
       async function getProfile() {
         try {
@@ -638,6 +666,7 @@
                 <p><strong>Username:</strong> ${user.username || "N/A"}</p>
                 <p><strong>Email:</strong> ${user.email || "N/A"}</p>
                 <p><strong>Google ID:</strong> ${user.googleId || "N/A"}</p>
+                <p><strong>GitHub ID:</strong> ${user.githubId || "N/A"}</p>
                 <p><strong>Created At:</strong> ${
                   user.createdAt
                     ? new Date(user.createdAt).toLocaleString()
@@ -653,11 +682,15 @@
         document.getElementById("userInfo").style.display = "none";
       }
 
-      // Check if user came from Google OAuth redirect
+      // Check if user came from OAuth redirect
       window.addEventListener("load", function () {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get("auth") === "success") {
-          showMessage("Google authentication successful!", "success");
+          const provider = urlParams.get("provider");
+          const providerName = provider
+            ? provider.charAt(0).toUpperCase() + provider.slice(1)
+            : "OAuth";
+          showMessage(`${providerName} authentication successful!`, "success");
           getProfile();
           // Clean up URL
           window.history.replaceState(
