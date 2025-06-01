@@ -27,6 +27,7 @@ const googleVerify = async (
     if (user) {
       return done(null, user);
     } else {
+      profile.username = profile.displayName.replace(/\s+/g, "-");
       const newUser = await User.create({
         data: {
           username: profile.displayName,
