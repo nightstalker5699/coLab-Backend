@@ -1,11 +1,8 @@
 import { Request, Response, NextFunction } from "express";
-import { catchReqAsync } from "../helpers/catchAsync";
+import { catchReqAsync, loginAsync } from "../helpers/catchAsync";
 import appError from "../helpers/appError";
 import AuthService from "../services/auth.service";
-import { UserObject, createUserType, loginUserType } from "../types/userTypes";
-import { RequestWithUser, DecodedToken } from "../types/generalTypes";
-import signTokens from "../helpers/jwtToken";
-import jwt from "jsonwebtoken";
+import { createUserType, loginUserType } from "../types/userTypes";
 
 /**
  * @desc User signup controller
@@ -13,7 +10,7 @@ import jwt from "jsonwebtoken";
  * @access Public
  */
 export const signup = catchReqAsync(
-  async (req: RequestWithUser, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     const userData: createUserType = req.body;
     const { email, password, username } = userData;
     // Validate email format
@@ -36,24 +33,31 @@ export const signup = catchReqAsync(
     }
 
     const newUser = await AuthService.signup(userData);
-    signTokens(newUser, res);
+    newUser.password = ""; // Don't return password in response
+    await loginAsync(req, newUser);
+    res.status(201).json({
+      status: "success",
+      data: {
+        user: newUser,
+      },
+    });
   }
 );
 
-/**
- * @desc User login controller
- * @route POST /api/login
- * @access Public
- */
+// /**
+//  * @desc User login controller
+//  * @route POST /api/login
+//  * @access Public
+//  */
 
-export const login = catchReqAsync(
-  async (req: RequestWithUser, res: Response, next: NextFunction) => {
-    const userData: loginUserType = req.body;
-    if (!userData.email || !userData.password) {
-      return next(new appError("Email and password are required", 400));
-    }
-    const userObj: UserObject = await AuthService.login(userData);
-    // Sign tokens and send response
-    signTokens(userObj, res);
-  }
-);
+// export const login = catchReqAsync(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     const userData: loginUserType = req.body;
+//     if (!userData.email || !userData.password) {
+//       return next(new appError("Email and password are required", 400));
+//     }
+//     const userObj: UserObject = await AuthService.login(userData);
+//     // Sign tokens and send response
+//     signTokens(userObj, res);
+//   }
+// );

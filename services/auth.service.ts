@@ -1,9 +1,10 @@
 import { PrismaClient, User as userType } from "@prisma/client";
-import { UserObject, createUserType, loginUserType } from "../types/userTypes";
+import { createUserType, loginUserType } from "../types/userTypes";
 import UserService from "./user.service";
 import appError from "../helpers/appError";
 const User = new PrismaClient().user;
 import bcrypt from "bcrypt";
+import { checkEncryption } from "../helpers/checkEncryption";
 /**
  * @desc AuthService for handling user authentication
  * @class AuthService
@@ -20,7 +21,7 @@ import bcrypt from "bcrypt";
  * */
 
 export default class AuthService {
-  static async signup(userData: createUserType): Promise<UserObject> {
+  static async signup(userData: createUserType): Promise<userType> {
     // Check if user already exists
 
     if (await UserService.checkUsed({ where: { email: userData.email } })) {
@@ -43,28 +44,28 @@ export default class AuthService {
 
     userData.password = await bcrypt.hash(userData.password, 12);
     // Create new user
-    const user = await User.create({
+    const user: userType = await User.create({
       data: userData,
     });
 
-    return new UserObject(user);
+    return user;
   }
-  static async login(userData: loginUserType): Promise<UserObject> {
+  static async localLogin(userData: loginUserType): Promise<userType> {
     // Check if user exists
-    const found: userType | null = await User.findUnique({
+    const user: userType | null = await User.findUnique({
       where: { email: userData.email },
     });
 
-    if (!found) {
+    if (!user) {
       throw new appError("Invalid Email or password", 401, "ValidationError");
     }
 
     // Check password
-    const userObj = new UserObject(found);
-    if (!(await userObj.comparePasswords(userData.password))) {
+
+    if (!(await checkEncryption(userData.password, user.password as string))) {
       throw new appError("Invalid Email or password", 401, "ValidationError");
     }
 
-    return userObj;
+    return user;
   }
 }
