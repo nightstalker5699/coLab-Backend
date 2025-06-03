@@ -404,7 +404,7 @@
       async function checkBackendStatus() {
         const indicator = document.getElementById("statusIndicator");
         try {
-          const response = await fetch(`${backendUrl}/api/profile`, {
+          const response = await fetch(`${backendUrl}/api/users/me`, {
             method: "GET",
             credentials: "include",
           });
@@ -597,7 +597,7 @@
       // Get user profile
       async function getProfile() {
         try {
-          const response = await fetch(`${backendUrl}/api/profile`, {
+          const response = await fetch(`${backendUrl}/api/users/me`, {
             method: "GET",
             credentials: "include",
           });

@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import { User as userType } from "@prisma/client";
+import { User, User as userType } from "@prisma/client";
 
 export type createUserType = {
   username: string;
@@ -7,7 +7,7 @@ export type createUserType = {
   password: string;
 };
 export type loginUserType = {
-  email: string;
+  identifier: string;
   password: string;
 };
 
@@ -19,3 +19,12 @@ export type updateUserType = {
   photo?: string;
   updatedPasswordAt?: Date;
 };
+
+export type partialUser = {
+  id: string;
+  username: string;
+  email: string;
+  photo: string | null;
+};
+
+export type UserWithoutPassowrd = Omit<User, "password">;

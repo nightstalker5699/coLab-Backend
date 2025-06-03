@@ -1,0 +1,246 @@
+openapi: 3.0.3
+info:
+  title: Team Management API
+  description: API for team management operations
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+  - url: https://api.example.com
+    description: Production server
+
+tags:
+  - name: Teams
+    description: Team management operations
+
+paths:
+  /api/teams:
+    post:
+      tags:
+        - Teams
+      summary: Create a new team
+      description: Create a new team with optional members. The authenticated user becomes the team leader.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTeamRequest"
+            examples:
+              basic_team:
+                summary: Basic team creation
+                value:
+                  teamData:
+                    teamName: "Development Team"
+                    teamLogo: "https://example.com/logo.png"
+                    theme: "blue"
+                  members: []
+              team_with_members:
+                summary: Team with initial members
+                value:
+                  teamData:
+                    teamName: "Marketing Team"
+                    teamLogo: "https://example.com/marketing-logo.png"
+                    theme: "green"
+                  members:
+                    [
+                      "2048691a-3c81-4f6f-b806-28c356daae93",
+                      "bed92681-fd28-4801-8335-7fdaf45ce386",
+                      "e2bea940-71f0-4ff5-9409-309c61ebcc12",
+                    ]
+      responses:
+        "200":
+          description: Team created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: "#/components/schemas/Team"
+              examples:
+                success_response:
+                  summary: Successful team creation
+                  value:
+                    status: success
+                    data:
+                      id: "team123"
+                      teamName: "Development Team"
+                      teamLogo: "https://example.com/logo.png"
+                      theme: "blue"
+                      joinCode: "ABC123XYZ"
+                      createdAt: "2024-01-15T10:30:00Z"
+                      updatedAt: "2024-01-15T10:30:00Z"
+        "400":
+          description: Validation error - Team name is required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                missing_team_name:
+                  summary: Missing team name
+                  value:
+                    status: error
+                    message: "you must insert a team"
+                    errorType: "ValidationError"
+                    statusCode: 400
+                database_error:
+                  summary: Database error
+                  value:
+                    status: error
+                    message: "an error creating your team"
+                    errorType: "DatabaseError"
+                    statusCode: 400
+        "401":
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  summary: Authentication required
+                  value:
+                    status: error
+                    message: "Authentication required"
+                    errorType: "AuthenticationError"
+                    statusCode: 401
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication
+
+  schemas:
+    CreateTeamRequest:
+      type: object
+      required:
+        - teamData
+      properties:
+        teamData:
+          type: object
+          required:
+            - teamName
+          properties:
+            teamName:
+              type: string
+              minLength: 1
+              maxLength: 100
+              example: "Development Team"
+              description: The name of the team
+            teamLogo:
+              type: string
+              format: uri
+              example: "https://example.com/logo.png"
+              description: URL to the team logo image
+            theme:
+              type: string
+              example: "blue"
+              description: Theme color for the team
+        members:
+          type: array
+          items:
+            type: string
+          example: ["user1", "user2", "user3"]
+          description: Array of user IDs to add as initial team members
+
+    Team:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "team123"
+          description: Unique identifier for the team
+        teamName:
+          type: string
+          example: "Development Team"
+          description: The name of the team
+        teamLogo:
+          type: string
+          format: uri
+          example: "https://example.com/logo.png"
+          description: URL to the team logo image
+        theme:
+          type: string
+          example: "blue"
+          description: Theme color for the team
+        joinCode:
+          type: string
+          example: "ABC123XYZ"
+          description: Unique code for joining the team
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+          description: Timestamp when the team was created
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+          description: Timestamp when the team was last updated
+
+    UserInTeam:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "relation123"
+          description: Unique identifier for the user-team relationship
+        userId:
+          type: string
+          example: "user123"
+          description: ID of the user
+        teamId:
+          type: string
+          example: "team123"
+          description: ID of the team
+        role:
+          type: string
+          enum: [LEADER, MEMBER]
+          example: "MEMBER"
+          description: Role of the user in the team
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+          description: Timestamp when the user joined the team
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+          description: Timestamp when the relationship was last updated
+
+    Error:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+          description: Status of the response
+        message:
+          type: string
+          example: "An error occurred"
+          description: Human-readable error message
+        errorType:
+          type: string
+          example: "ValidationError"
+          description: Type of e

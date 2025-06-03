@@ -1,5 +1,5 @@
 import { PrismaClient, User as userType } from "@prisma/client";
-const User = new PrismaClient().user;
+import User from "../middlewares/prisma/user.middleware";
 import passport from "passport";
 import { Request, Response, NextFunction } from "express";
 import { authenticateAsync, catchReqAsync, loginAsync } from "./catchAsync";
@@ -24,6 +24,13 @@ passport.deserializeUser(async (id: string, done) => {
   try {
     const user: userType = (await User.findUnique({
       where: { id },
+      include: {
+        userInTeams: {
+          include: {
+            team: true,
+          },
+        },
+      },
     })) as userType;
     done(null, user);
   } catch (error) {

@@ -12,9 +12,12 @@ dotenv.config({ path: "./.env" });
 databaseSetup(); // Set up the database
 
 // server creation
-const server = app.listen(process.env.PORT, () => {
-  console.log(`App running on port ${process.env.PORT}`);
-  console.log("API Documentation available at http://localhost:8000/api-docs");
+const port = process.env.PORT;
+const server = app.listen(port, () => {
+  console.log(`App running on port ${port}`);
+  console.log(
+    `API Documentation available at http://localhost:${port}/api-docs`
+  );
 });
 
 process.on("unhandledRejection", (err) => {

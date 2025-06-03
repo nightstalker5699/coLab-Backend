@@ -2,13 +2,15 @@ import { Request, Response, NextFunction } from "express";
 import { catchReqAsync, loginAsync } from "../helpers/catchAsync";
 import appError from "../helpers/appError";
 import userService from "../services/user.service";
-import { updateUserType } from "../types/userTypes";
+import { partialUser, updateUserType } from "../types/userTypes";
 import { User as userType } from "@prisma/client";
 
 export const getMe = catchReqAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    req.params.username = req.user?.username || "";
-    next();
+    return res.status(200).json({
+      status: "sucess",
+      data: { user: req.user },
+    });
   }
 );
 
@@ -19,7 +21,9 @@ export const getUser = catchReqAsync(
         new appError("you must use characters", 400, "ValidationError")
       );
     }
-    const userObj: userType = await userService.getUser(req.params.username);
+    const userObj: userType = await userService.getUser({
+      where: { username: req.params.username },
+    });
 
     res.status(200).json({
       status: "success",
@@ -70,8 +74,11 @@ export const updateUser = catchReqAsync(
         new appError("you must use characters", 400, "ValidationError")
       );
     }
-    const user: userType = await userService.getUser(req.params.username);
-
+    const user: userType = await userService.getUser({
+      where: { username: req.params.username },
+      omit: { password: false },
+    });
+    console.log(user);
     const userObj: userType = await userService.updateUser(user, theUpdate);
 
     res.status(200).json({
@@ -106,12 +113,31 @@ export const deleteUser = catchReqAsync(
         new appError("you must use characters", 400, "ValidationError")
       );
     }
-    const user: userType = await userService.getUser(req.params.username);
+    const user: userType = await userService.getUser({
+      where: { username: req.params.username },
+    });
     await userService.deleteUser(user.id);
 
     res.status(204).json({
       status: "success",
       data: null,
+    });
+  }
+);
+
+export const getUsers = catchReqAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const username = req.body.username;
+    if (!username) {
+      return next(
+        new appError("you must insert characters", 400, "ValidationError")
+      );
+    }
+    const users: partialUser[] = await userService.getUsersName(username);
+    console.log(users);
+    res.json({
+      status: "sucess",
+      data: users,
     });
   }
 );

@@ -4,19 +4,19 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
 }
-
 model User {
   id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  username      String @unique @db.VarChar(25)
+  username      String @unique @db.VarChar(50)
   email     String   @unique @db.VarChar(50)
   password  String?   @db.VarChar(255)
   googleId String? @unique @db.VarChar(255)
   githubId String? @unique @db.VarChar(255)
   createdAt DateTime @default(now())
   updatedPasswordAt DateTime?
-  photo    String? @db.VarChar(60)
+  photo    String? @db.VarChar(100)
   isdeleted Boolean  @default(false)
   role      SystemRole @default(SYSTEMUSER)
   resetToken ResetCode[]
@@ -38,7 +38,7 @@ model ResetCode {
 model Team {
   id       String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   teamName  String @unique @db.VarChar(25)
-  teamLogo String? @db.VarChar(30)
+  teamLogo String? @db.VarChar(60)
   createdAt DateTime   @default(now())
   theme     String?   @db.VarChar(20)
   joinCode String?     @unique @db.VarChar(12)

@@ -1,28 +1,45 @@
-import { Prisma, PrismaClient, User as userType } from "@prisma/client";
+import { Prisma, User as userType } from "@prisma/client";
 import {
   createUserType,
   loginUserType,
+  partialUser,
   updateUserType,
+  UserWithoutPassowrd,
 } from "../types/userTypes";
 import appError from "../helpers/appError";
-import { catchReqAsync } from "../helpers/catchAsync";
-import { Request, Response, Express } from "express";
-import bcrypt from "bcrypt";
 import { checkEncryption } from "../helpers/checkEncryption";
-const User = new PrismaClient().user;
+import User from "../middlewares/prisma/user.middleware";
+import bcrypt from "bcrypt";
 
 export default class UserService {
   static async checkUsed(query: Prisma.UserCountArgs): Promise<boolean> {
     return (await User.count(query)) > 0;
   }
-  static async getUser(username: string): Promise<userType> {
-    const user: userType | null = await User.findUnique({
-      where: { username: username },
+  static async getUsersName(text: string): Promise<partialUser[]> {
+    let users: partialUser[] = await User.findMany({
+      where: {
+        username: {
+          contains: text,
+          mode: "insensitive",
+        },
+      },
+      take: 7,
     });
+    users = users.map((user) => {
+      return {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        photo: user.photo,
+      };
+    });
+    return users;
+  }
+  static async getUser(args: Prisma.UserFindUniqueArgs): Promise<userType> {
+    const user: userType | null = await User.findUnique(args);
     if (!user) {
       throw new appError("User not found", 404, "NotFoundError");
     }
-    user.password = ""; // Don't return password
     return user;
   }
 
@@ -59,7 +76,7 @@ export default class UserService {
         );
       }
       if (
-        !userObj.password ||
+        userObj.password &&
         !(await checkEncryption(data.password as string, userObj.password))
       ) {
         throw new appError(

@@ -1,8 +1,8 @@
-import { PrismaClient, User as userType } from "@prisma/client";
+import { User as userType } from "@prisma/client";
 import { createUserType, loginUserType } from "../types/userTypes";
 import UserService from "./user.service";
 import appError from "../helpers/appError";
-const User = new PrismaClient().user;
+import User from "../middlewares/prisma/user.middleware";
 import bcrypt from "bcrypt";
 import { checkEncryption } from "../helpers/checkEncryption";
 import { catchAuthAsync } from "../helpers/catchAsync";
@@ -60,8 +60,9 @@ export default class AuthService {
     try {
       const user: userType | null = await User.findFirst({
         where: {
-          OR: [{ email: identifier }, { username: identifier }],
+          OR: [{ username: identifier }, { email: identifier }],
         },
+        omit: { password: false },
       });
       if (!user) {
         return done(new appError("User not Found", 404, "NotFound"), false);
@@ -145,7 +146,6 @@ export default class AuthService {
       done: any
     ) => {
       try {
-        console.log("Google profile:", profile);
         const user = await User.findUnique({
           where: { email: profile.emails[0].value },
         });
@@ -160,7 +160,7 @@ export default class AuthService {
           }
           return done(null, user);
         } else {
-          profile.username = profile.displayName.replace(/\s+/g, "-");
+          profile.displayName = profile.displayName.replace(/\s+/g, "-");
           const newUser = await User.create({
             data: {
               username: profile.displayName,
