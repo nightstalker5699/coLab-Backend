@@ -1,4 +1,4 @@
-import { Role, Team } from "@prisma/client";
+import { Role, Team, UserInTeam } from "@prisma/client";
 
 type partialTeam = {
   teamName: string;

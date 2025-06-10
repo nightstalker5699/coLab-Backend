@@ -3,7 +3,7 @@ import { catchReqAsync, loginAsync } from "../helpers/catchAsync";
 import appError from "../helpers/appError";
 import userService from "../services/user.service";
 import { partialUser, updateUserType } from "../types/userTypes";
-import { User as userType } from "@prisma/client";
+import { Iuser } from "../types/entitiesTypes";
 
 export const getMe = catchReqAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -21,7 +21,7 @@ export const getUser = catchReqAsync(
         new appError("you must use characters", 400, "ValidationError")
       );
     }
-    const userObj: userType = await userService.getUser({
+    const userObj: Iuser = await userService.getUser({
       where: { username: req.params.username },
     });
 
@@ -40,8 +40,8 @@ export const updateMe = catchReqAsync(
         new appError("you can't update nothing", 400, "ValidationError")
       );
     }
-    const userObj: userType = await userService.updateUser(
-      req.user as userType,
+    const userObj: Iuser = await userService.updateUser(
+      req.user as Iuser,
       theUpdate
     );
     await loginAsync(req, userObj);
@@ -74,12 +74,12 @@ export const updateUser = catchReqAsync(
         new appError("you must use characters", 400, "ValidationError")
       );
     }
-    const user: userType = await userService.getUser({
+    const user: Iuser = await userService.getUser({
       where: { username: req.params.username },
       omit: { password: false },
     });
     console.log(user);
-    const userObj: userType = await userService.updateUser(user, theUpdate);
+    const userObj: Iuser = await userService.updateUser(user, theUpdate);
 
     res.status(200).json({
       status: "success",
@@ -113,7 +113,7 @@ export const deleteUser = catchReqAsync(
         new appError("you must use characters", 400, "ValidationError")
       );
     }
-    const user: userType = await userService.getUser({
+    const user: Iuser = await userService.getUser({
       where: { username: req.params.username },
     });
     await userService.deleteUser(user.id);

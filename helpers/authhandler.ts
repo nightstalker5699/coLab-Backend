@@ -1,4 +1,4 @@
-import { PrismaClient, User as userType } from "@prisma/client";
+import { Iuser } from "../types/entitiesTypes";
 import User from "../middlewares/prisma/user.middleware";
 import passport from "passport";
 import { Request, Response, NextFunction } from "express";
@@ -22,16 +22,9 @@ passport.serializeUser((user: any, done) => {
 
 passport.deserializeUser(async (id: string, done) => {
   try {
-    const user: userType = (await User.findUnique({
+    const user: Iuser = (await User.findUnique({
       where: { id },
-      include: {
-        userInTeams: {
-          include: {
-            team: true,
-          },
-        },
-      },
-    })) as userType;
+    })) as Iuser;
     done(null, user);
   } catch (error) {
     done(error);
@@ -46,7 +39,7 @@ export const authhandler = (authType: string) => {
       if (auth instanceof appError) {
         return next(auth);
       }
-      await loginAsync(req, auth as userType);
+      await loginAsync(req, auth as Iuser);
       res.redirect(process.env.FRONTEND_URL || "http://localhost:3000");
     }
   );

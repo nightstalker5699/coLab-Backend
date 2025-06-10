@@ -1,11 +1,6 @@
-import { Prisma, User as userType } from "@prisma/client";
-import {
-  createUserType,
-  loginUserType,
-  partialUser,
-  updateUserType,
-  UserWithoutPassowrd,
-} from "../types/userTypes";
+import { Iuser } from "../types/entitiesTypes";
+import { Prisma } from "@prisma/client";
+import { partialUser, updateUserType } from "../types/userTypes";
 import appError from "../helpers/appError";
 import { checkEncryption } from "../helpers/checkEncryption";
 import User from "../middlewares/prisma/user.middleware";
@@ -35,8 +30,8 @@ export default class UserService {
     });
     return users;
   }
-  static async getUser(args: Prisma.UserFindUniqueArgs): Promise<userType> {
-    const user: userType | null = await User.findUnique(args);
+  static async getUser(args: Prisma.UserFindUniqueArgs): Promise<Iuser> {
+    const user: Iuser | null = await User.findUnique(args);
     if (!user) {
       throw new appError("User not found", 404, "NotFoundError");
     }
@@ -44,9 +39,9 @@ export default class UserService {
   }
 
   static async updateUser(
-    userObj: userType,
+    userObj: Iuser,
     data: updateUserType
-  ): Promise<userType> {
+  ): Promise<Iuser> {
     if (
       data.email &&
       (await UserService.checkUsed({ where: { email: data.email } }))
@@ -89,14 +84,14 @@ export default class UserService {
       data.updatedPasswordAt = new Date(Date.now());
       delete data.newPassword;
     }
-    const updated: userType = await User.update({
+    const updated: Iuser = await User.update({
       where: { id: userObj.id },
       data,
     });
     return updated;
   }
-  static async deleteUser(userId: string): Promise<userType> {
-    const deletedUser: userType = await User.update({
+  static async deleteUser(userId: string): Promise<Iuser> {
+    const deletedUser: Iuser = await User.update({
       where: {
         id: userId,
       },

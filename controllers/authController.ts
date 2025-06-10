@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { catchReqAsync, loginAsync } from "../helpers/catchAsync";
 import appError from "../helpers/appError";
 import AuthService from "../services/auth.service";
-import { createUserType, loginUserType } from "../types/userTypes";
+import { createUserType } from "../types/userTypes";
 import { Strategy as githubStrategy } from "passport-github2";
 import { Strategy as googleStrategy } from "passport-google-oauth20";
 import { Strategy as localStrategy } from "passport-local";

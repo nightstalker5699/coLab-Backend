@@ -1,5 +1,5 @@
-import { User as userType } from "@prisma/client";
-import { createUserType, loginUserType } from "../types/userTypes";
+import { Iuser } from "../types/entitiesTypes";
+import { createUserType } from "../types/userTypes";
 import UserService from "./user.service";
 import appError from "../helpers/appError";
 import User from "../middlewares/prisma/user.middleware";
@@ -15,14 +15,13 @@ import { catchAuthAsync } from "../helpers/catchAsync";
  * @throws {appError} - Throws an error if the user already exists
  * @return {Promise<UserObject>} - Returns a promise that resolves to a UserObject
  * @method login - Logs in an existing user
- * @param {loginUserType} userData - The user data for login
  * @throws {appError} - Throws an error if the user already exists
  * @return {Promise<UserObject>} - Returns a promise that resolves to a UserObject
  *
  * */
 
 export default class AuthService {
-  static async signup(userData: createUserType): Promise<userType> {
+  static async signup(userData: createUserType): Promise<Iuser> {
     // Check if user already exists
 
     if (await UserService.checkUsed({ where: { email: userData.email } })) {
@@ -45,7 +44,7 @@ export default class AuthService {
 
     userData.password = await bcrypt.hash(userData.password, 12);
     // Create new user
-    const user: userType = await User.create({
+    const user: Iuser = await User.create({
       data: userData,
     });
 
@@ -58,7 +57,7 @@ export default class AuthService {
     done: any
   ) {
     try {
-      const user: userType | null = await User.findFirst({
+      const user: Iuser | null = await User.findFirst({
         where: {
           OR: [{ username: identifier }, { email: identifier }],
         },
@@ -87,52 +86,45 @@ export default class AuthService {
       profile: any,
       done: any
     ) => {
-      try {
-        console.log("GitHub profile:", profile);
-        // Fetch user email from GitHub API
-        let email = null;
-        const emailResponse = await fetch(
-          "https://api.github.com/user/emails",
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              userAgent: "CoLab",
-            },
-          }
-        );
-        if (emailResponse.ok) {
-          const emails: any[] = await emailResponse.json();
-          email = emails.find((email) => {
-            return email.primary && email.verified;
-          });
-        }
-        const user = await User.findUnique({
-          where: { email: email.email },
+      console.log("GitHub profile:", profile);
+      // Fetch user email from GitHub API
+      let email = null;
+      const emailResponse = await fetch("https://api.github.com/user/emails", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          userAgent: "CoLab",
+        },
+      });
+      if (emailResponse.ok) {
+        const emails: any[] = await emailResponse.json();
+        email = emails.find((email) => {
+          return email.primary && email.verified;
         });
-        if (user) {
-          if (!user.githubId) {
-            await User.update({
-              where: { id: user.id },
-              data: {
-                githubId: profile.id,
-              },
-            });
-          }
-          return done(null, user);
-        } else {
-          profile.username = profile.displayName.replace(/\s+/g, "-");
-          const newUser = await User.create({
+      }
+      const user = await User.findUnique({
+        where: { email: email.email },
+      });
+      if (user) {
+        if (!user.githubId) {
+          await User.update({
+            where: { id: user.id },
             data: {
-              username: profile.username,
-              email: email.email,
               githubId: profile.id,
-              photo: profile.photos[0].value,
             },
           });
-          return done(null, newUser);
         }
-      } catch (error) {
-        return done(error);
+        return done(null, user);
+      } else {
+        profile.username = profile.displayName.replace(/\s+/g, "-");
+        const newUser = await User.create({
+          data: {
+            username: profile.username,
+            email: email.email,
+            githubId: profile.id,
+            photo: profile.photos[0].value,
+          },
+        });
+        return done(null, newUser);
       }
     }
   );
@@ -145,34 +137,30 @@ export default class AuthService {
       profile: any,
       done: any
     ) => {
-      try {
-        const user = await User.findUnique({
-          where: { email: profile.emails[0].value },
-        });
-        if (user) {
-          if (!user.googleId) {
-            await User.update({
-              where: { id: user.id },
-              data: {
-                googleId: profile.id,
-              },
-            });
-          }
-          return done(null, user);
-        } else {
-          profile.displayName = profile.displayName.replace(/\s+/g, "-");
-          const newUser = await User.create({
+      const user = await User.findUnique({
+        where: { email: profile.emails[0].value },
+      });
+      if (user) {
+        if (!user.googleId) {
+          await User.update({
+            where: { id: user.id },
             data: {
-              username: profile.displayName,
-              email: profile.emails[0].value,
               googleId: profile.id,
-              photo: profile.photos[0].value,
             },
           });
-          return done(null, newUser);
         }
-      } catch (error) {
-        return done(error);
+        return done(null, user);
+      } else {
+        profile.displayName = profile.displayName.replace(/\s+/g, "-");
+        const newUser = await User.create({
+          data: {
+            username: profile.displayName,
+            email: profile.emails[0].value,
+            googleId: profile.id,
+            photo: profile.photos[0].value,
+          },
+        });
+        return done(null, newUser);
       }
     }
   );

@@ -19,6 +19,90 @@ tags:
 
 paths:
   /api/teams:
+    get:
+      tags:
+        - Teams
+      summary: Get my teams
+      description: Retrieve all teams where the authenticated user is a member or leader
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Teams retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: "#/components/schemas/Team"
+                        - type: object
+                          properties:
+                            userRole:
+                              type: string
+                              enum: [LEADER, MEMBER]
+                              example: "MEMBER"
+                              description: Current user's role in this team
+                            memberCount:
+                              type: integer
+                              example: 5
+                              description: Total number of members in the team
+              examples:
+                success_response:
+                  summary: Successful teams retrieval
+                  value:
+                    status: success
+                    data:
+                      - id: "team123"
+                        teamName: "Development Team"
+                        teamLogo: "https://example.com/logo.png"
+                        theme: "blue"
+                        joinCode: "ABC123XYZ"
+                        userRole: "LEADER"
+                        memberCount: 3
+                        createdAt: "2024-01-15T10:30:00Z"
+                        updatedAt: "2024-01-15T10:30:00Z"
+                      - id: "team456"
+                        teamName: "Marketing Team"
+                        teamLogo: "https://example.com/marketing-logo.png"
+                        theme: "green"
+                        joinCode: "DEF456ABC"
+                        userRole: "MEMBER"
+                        memberCount: 7
+                        createdAt: "2024-01-10T14:20:00Z"
+                        updatedAt: "2024-01-12T09:15:00Z"
+                empty_response:
+                  summary: No teams found
+                  value:
+                    status: success
+                    data: []
+        "401":
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  summary: Authentication required
+                  value:
+                    status: error
+                    message: "Authentication required"
+                    errorType: "AuthenticationError"
+                    statusCode: 401
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
     post:
       tags:
         - Teams
@@ -243,4 +327,8 @@ components:
         errorType:
           type: string
           example: "ValidationError"
-          description: Type of e
+          description: Type of error that occurred
+        statusCode:
+          type: integer
+          example: 400
+          description: HTTP status code

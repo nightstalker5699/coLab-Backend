@@ -1,17 +1,17 @@
-import { PrismaClient, Team, User, UserInTeam } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { Iuser, Iteam, IuserInTeam } from "../types/entitiesTypes";
 import { createTeamType } from "../types/teamTypes";
-import { getSystemErrorMap } from "util";
 import AppError from "../helpers/appError";
 
 const client = new PrismaClient();
 
 export default class teamService {
-  static async createTeam(user: User, data: createTeamType): Promise<Team> {
-    const team: Team = await client.team.create({ data: data.teamData });
+  static async createTeam(user: Iuser, data: createTeamType): Promise<Iteam> {
+    const team: Iteam = await client.team.create({ data: data.teamData });
     if (!team) {
       throw new AppError("an error creating your team", 400, "DatabaseError");
     }
-    const relation: UserInTeam = await client.userInTeam.create({
+    const relation: IuserInTeam = await client.userInTeam.create({
       data: {
         userId: user.id,
         teamId: team.id,
@@ -21,13 +21,13 @@ export default class teamService {
 
     return team;
   }
-  static async addMembers(team: Team, members: UserInTeam[]) {
+  static async addMembers(team: Iteam, members: IuserInTeam[]) {
     const relation = await client.userInTeam.createMany({
       data: members,
     });
     return relation;
   }
-  static async joinTeam(user: User, code: string) {
+  static async joinTeam(user: Iuser, code: string) {
     const team = await client.team.findUnique({
       where: {
         joinCode: code,
@@ -40,7 +40,7 @@ export default class teamService {
         "ValidationError"
       );
     }
-    const relation: UserInTeam = await client.userInTeam.create({
+    const relation: IuserInTeam = await client.userInTeam.create({
       data: {
         userId: user.id,
         teamId: team.id,
