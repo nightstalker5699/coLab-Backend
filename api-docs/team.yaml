@@ -205,6 +205,91 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /api/teams/joinTeam:
+    post:
+      summary: Join a team using a join code
+      description: Allows an authenticated user to join an existing team by providing a valid join code
+      tags:
+        - Teams
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoinTeamRequest"
+            examples:
+              valid_request:
+                summary: Valid join team request
+                value:
+                  joinCode: "ABC123XYZ0"
+      responses:
+        "200":
+          description: Successfully joined the team
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JoinTeamResponse"
+              examples:
+                success_response:
+                  summary: Successful team join
+                  value:
+                    status: "sucess"
+                    data:
+                      team:
+                        id: "team-uuid-123"
+                        teamName: "Development Team"
+                        joinCode: "ABC123XYZ0"
+                        createdAt: "2024-01-15T10:30:00Z"
+                        updatedAt: "2024-01-15T10:30:00Z"
+                        userInTeams:
+                          - user:
+                              id: "user-uuid-456"
+                              name: "John Doe"
+                              email: "john@example.com"
+                          - user:
+                              id: "user-uuid-789"
+                              name: "Jane Smith"
+                              email: "jane@example.com"
+        "400":
+          description: Bad request - Missing or invalid join code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                missing_code:
+                  summary: Missing join code
+                  value:
+                    status: "error"
+                    message: "you must input a code to join a team"
+                    errorType: "ValidationError"
+        "404":
+          description: Team not found - Invalid join code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                invalid_code:
+                  summary: Invalid join code
+                  value:
+                    status: "error"
+                    message: "This code doesn't belong to a team"
+                    errorType: "ValidationError"
+        "401":
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
   securitySchemes:

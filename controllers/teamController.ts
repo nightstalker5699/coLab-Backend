@@ -4,6 +4,7 @@ import AppError from "../helpers/appError";
 import { Request, Response, NextFunction } from "express";
 import { Iuser, IuserInTeam } from "../types/entitiesTypes";
 import { createTeamType } from "../types/teamTypes";
+import { join } from "path";
 
 export const createTeam = catchReqAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -29,11 +30,33 @@ export const createTeam = catchReqAsync(
 
 export const getMyTeams = catchReqAsync(
   async (req: Request, res: Response, next: NextFunction) => {
+    const teams = await teamService.getMyTeams(req.user?.id as string);
     res.status(200).json({
-      status: "success",
+      status: "sucess",
       data: {
-        teams: req.user?.userInTeams,
+        teams,
       },
+    });
+  }
+);
+
+export const joinTeam = catchReqAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { joinCode } = req.body;
+    if (!joinCode) {
+      return next(
+        new AppError(
+          "you must input a code to join a team",
+          400,
+          "ValidationError"
+        )
+      );
+    }
+    const updatedTeam = await teamService.joinTeam(req.user as Iuser, joinCode);
+
+    res.status(200).json({
+      status: "sucess",
+      data: { team: updatedTeam },
     });
   }
 );

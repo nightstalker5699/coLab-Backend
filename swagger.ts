@@ -83,19 +83,6 @@ const options: swaggerJSDoc.Options = {
             },
           },
         },
-        ErrorResponse: {
-          type: "object",
-          properties: {
-            status: {
-              type: "string",
-              example: "error",
-            },
-            message: {
-              type: "string",
-              example: "Error message",
-            },
-          },
-        },
         SuccessResponse: {
           type: "object",
           properties: {

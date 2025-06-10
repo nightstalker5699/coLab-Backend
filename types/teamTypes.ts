@@ -4,6 +4,7 @@ type partialTeam = {
   teamName: string;
   teamLogo?: string;
   theme?: string;
+  joinCode?: string;
 };
 
 export type createTeamType = {
