@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { catchReqAsync, loginAsync } from "../helpers/catchAsync";
 import appError from "../helpers/appError";
 import AuthService from "../services/auth.service";
@@ -6,13 +6,9 @@ import { createUserType } from "../types/userTypes";
 import { Strategy as githubStrategy } from "passport-github2";
 import { Strategy as googleStrategy } from "passport-google-oauth20";
 import { Strategy as localStrategy } from "passport-local";
-/**
- * @desc User signup controller
- * @route POST /api/signup
- * @access Public
- */
+import { IRequest } from "../types/generalTypes";
 export const signup = catchReqAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: IRequest, res: Response, next: NextFunction) => {
     const userData: createUserType = req.body;
     const { email, password, username } = userData;
     // Validate email format
@@ -76,7 +72,7 @@ export const localSignin = new localStrategy(
 );
 
 export const logout = catchReqAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: IRequest, res: Response, next: NextFunction) => {
     req.logout((err) => {
       if (err) {
         return next(new appError("Logout failed", 500, "ServerError"));

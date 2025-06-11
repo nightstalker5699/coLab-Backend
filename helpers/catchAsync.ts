@@ -1,18 +1,19 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
+import { IRequest } from "../types/generalTypes";
 import passport from "./authhandler";
 import { User as userType } from "@prisma/client";
 import { Profile } from "passport-google-oauth20";
 export function catchReqAsync(
-  fn: (req: Request, res: Response, next: NextFunction) => any
+  fn: (req: IRequest, res: Response, next: NextFunction) => any
 ) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: IRequest, res: Response, next: NextFunction) => {
     fn(req, res, next).catch((error: Error) => next(error));
   };
 }
 
 export function catchAuthAsync(
   fn: (
-    req: Request,
+    req: IRequest,
     accessToken: any,
     refreshToken: any,
     profile: Profile,
@@ -20,7 +21,7 @@ export function catchAuthAsync(
   ) => any
 ) {
   return (
-    req: Request,
+    req: IRequest,
     accessToken: any,
     refreshToken: any,
     profile: Profile,
@@ -33,7 +34,7 @@ export function catchAuthAsync(
 }
 
 export function authenticateAsync(
-  req: Request,
+  req: IRequest,
   res: Response,
   next: NextFunction,
   type: string
@@ -51,7 +52,7 @@ export function authenticateAsync(
   });
 }
 
-export function loginAsync(req: Request, user: userType) {
+export function loginAsync(req: IRequest, user: userType) {
   return new Promise((resolve, reject) => {
     req.login(user, (error: any) => {
       if (error) {

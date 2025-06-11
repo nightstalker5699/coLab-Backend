@@ -6,7 +6,7 @@ const model = new PrismaClient().$extends({
     user: {
       async $allOperations({ model, operation, args, query }) {
         const selectArgs = args as any;
-        if (selectArgs.omit?.password === false) {
+        if (selectArgs.omit?.password === false || operation == "count") {
           return query(selectArgs);
         }
         selectArgs.omit = { password: true };
@@ -16,4 +16,4 @@ const model = new PrismaClient().$extends({
   },
 });
 
-export default model.user;
+export default model;

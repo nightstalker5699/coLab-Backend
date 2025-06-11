@@ -1,10 +1,12 @@
-import { Iuser } from "../types/entitiesTypes";
+import { IUser } from "../types/entitiesTypes";
 import { Prisma } from "@prisma/client";
 import { partialUser, updateUserType } from "../types/userTypes";
 import appError from "../helpers/appError";
 import { checkEncryption } from "../helpers/checkEncryption";
-import User from "../middlewares/prisma/user.middleware";
+import client from "../middlewares/prisma/user.middleware";
 import bcrypt from "bcrypt";
+
+const User = client.user;
 
 export default class UserService {
   static async checkUsed(query: Prisma.UserCountArgs): Promise<boolean> {
@@ -30,8 +32,8 @@ export default class UserService {
     });
     return users;
   }
-  static async getUser(args: Prisma.UserFindUniqueArgs): Promise<Iuser> {
-    const user: Iuser | null = await User.findUnique(args);
+  static async getUser(args: Prisma.UserFindUniqueArgs): Promise<IUser> {
+    const user: IUser | null = await User.findUnique(args);
     if (!user) {
       throw new appError("User not found", 404, "NotFoundError");
     }
@@ -39,9 +41,9 @@ export default class UserService {
   }
 
   static async updateUser(
-    userObj: Iuser,
+    userObj: IUser,
     data: updateUserType
-  ): Promise<Iuser> {
+  ): Promise<IUser> {
     if (
       data.email &&
       (await UserService.checkUsed({ where: { email: data.email } }))
@@ -84,14 +86,14 @@ export default class UserService {
       data.updatedPasswordAt = new Date(Date.now());
       delete data.newPassword;
     }
-    const updated: Iuser = await User.update({
+    const updated: IUser = await User.update({
       where: { id: userObj.id },
       data,
     });
     return updated;
   }
-  static async deleteUser(userId: string): Promise<Iuser> {
-    const deletedUser: Iuser = await User.update({
+  static async deleteUser(userId: string): Promise<IUser> {
+    const deletedUser: IUser = await User.update({
       where: {
         id: userId,
       },

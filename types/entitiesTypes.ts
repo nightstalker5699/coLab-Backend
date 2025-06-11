@@ -1,14 +1,14 @@
 import { User, Team, UserInTeam } from "@prisma/client";
 
-export interface Iuser extends User {
-  userInTeams?: IuserInTeam[];
+export interface IUser extends User {
+  userInTeams?: IUserInTeam[];
 }
 
-export interface Iteam extends Team {
-  userInTeams?: IuserInTeam[];
+export interface ITeam extends Team {
+  userInTeams?: IUserInTeam[];
 }
 
-export interface IuserInTeam extends UserInTeam {
-  user?: Iuser;
-  team?: Iteam;
+export interface IUserInTeam extends UserInTeam {
+  user?: IUser;
+  team?: ITeam;
 }

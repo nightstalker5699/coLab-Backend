@@ -1,12 +1,12 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { catchReqAsync, loginAsync } from "../helpers/catchAsync";
 import appError from "../helpers/appError";
 import userService from "../services/user.service";
 import { partialUser, updateUserType } from "../types/userTypes";
-import { Iuser } from "../types/entitiesTypes";
-
+import { IUser } from "../types/entitiesTypes";
+import { IRequest } from "../types/generalTypes";
 export const getMe = catchReqAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: IRequest, res: Response, next: NextFunction) => {
     return res.status(200).json({
       status: "sucess",
       data: { user: req.user },
@@ -15,13 +15,13 @@ export const getMe = catchReqAsync(
 );
 
 export const getUser = catchReqAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: IRequest, res: Response, next: NextFunction) => {
     if (!req.params.username) {
       return next(
         new appError("you must use characters", 400, "ValidationError")
       );
     }
-    const userObj: Iuser = await userService.getUser({
+    const userObj: IUser = await userService.getUser({
       where: { username: req.params.username },
     });
 
@@ -33,15 +33,15 @@ export const getUser = catchReqAsync(
 );
 
 export const updateMe = catchReqAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: IRequest, res: Response, next: NextFunction) => {
     const theUpdate: updateUserType = req.body;
     if (!theUpdate) {
       return next(
         new appError("you can't update nothing", 400, "ValidationError")
       );
     }
-    const userObj: Iuser = await userService.updateUser(
-      req.user as Iuser,
+    const userObj: IUser = await userService.updateUser(
+      req.user as IUser,
       theUpdate
     );
     await loginAsync(req, userObj);
@@ -51,9 +51,8 @@ export const updateMe = catchReqAsync(
     });
   }
 );
-
 export const updateUser = catchReqAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: IRequest, res: Response, next: NextFunction) => {
     const theUpdate: updateUserType = req.body;
     if (!theUpdate) {
       return next(
@@ -74,12 +73,12 @@ export const updateUser = catchReqAsync(
         new appError("you must use characters", 400, "ValidationError")
       );
     }
-    const user: Iuser = await userService.getUser({
+    const user: IUser = await userService.getUser({
       where: { username: req.params.username },
       omit: { password: false },
     });
     console.log(user);
-    const userObj: Iuser = await userService.updateUser(user, theUpdate);
+    const userObj: IUser = await userService.updateUser(user, theUpdate);
 
     res.status(200).json({
       status: "success",
@@ -88,7 +87,7 @@ export const updateUser = catchReqAsync(
   }
 );
 export const deleteMe = catchReqAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: IRequest, res: Response, next: NextFunction) => {
     await userService.deleteUser(req.user?.id as string);
     res.status(204).json({
       status: "success",
@@ -98,7 +97,7 @@ export const deleteMe = catchReqAsync(
 );
 
 export const deleteUser = catchReqAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: IRequest, res: Response, next: NextFunction) => {
     if (req.user?.role !== "ADMIN") {
       return next(
         new appError(
@@ -113,7 +112,7 @@ export const deleteUser = catchReqAsync(
         new appError("you must use characters", 400, "ValidationError")
       );
     }
-    const user: Iuser = await userService.getUser({
+    const user: IUser = await userService.getUser({
       where: { username: req.params.username },
     });
     await userService.deleteUser(user.id);
@@ -126,7 +125,7 @@ export const deleteUser = catchReqAsync(
 );
 
 export const getUsers = catchReqAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: IRequest, res: Response, next: NextFunction) => {
     const username = req.body.username;
     if (!username) {
       return next(

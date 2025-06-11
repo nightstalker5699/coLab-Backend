@@ -1,7 +1,8 @@
-import { Iuser } from "../types/entitiesTypes";
-import User from "../middlewares/prisma/user.middleware";
+import { IUser } from "../types/entitiesTypes";
+import client from "../middlewares/prisma/user.middleware";
 import passport from "passport";
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
+import { IRequest } from "../types/generalTypes";
 import { authenticateAsync, catchReqAsync, loginAsync } from "./catchAsync";
 import appError from "./appError";
 import {
@@ -9,6 +10,8 @@ import {
   googleSignin,
   githubSignin,
 } from "../controllers/authController";
+
+const User = client.user;
 
 // Importing the authentication strategies
 passport.use(localSignin);
@@ -22,24 +25,24 @@ passport.serializeUser((user: any, done) => {
 
 passport.deserializeUser(async (id: string, done) => {
   try {
-    const user: Iuser = (await User.findUnique({
+    const user: IUser = (await User.findUnique({
       where: { id },
-    })) as Iuser;
+    })) as IUser;
     done(null, user);
   } catch (error) {
     done(error);
   }
 });
 
-// Function to handle authentication requests
+// Function to handle authentication Irequests
 export const authhandler = (authType: string) => {
   return catchReqAsync(
-    async (req: Request, res: Response, next: NextFunction) => {
+    async (req: IRequest, res: Response, next: NextFunction) => {
       const auth = await authenticateAsync(req, res, next, authType);
       if (auth instanceof appError) {
         return next(auth);
       }
-      await loginAsync(req, auth as Iuser);
+      await loginAsync(req, auth as IUser);
       res.redirect(process.env.FRONTEND_URL || "http://localhost:3000");
     }
   );

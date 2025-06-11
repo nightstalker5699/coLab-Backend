@@ -52,7 +52,7 @@ model Team {
 
 
 model UserInTeam {
-  id       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId    String @db.Uuid 
   teamId    String @db.Uuid
   role      Role   @default(MEMBER)
@@ -61,7 +61,8 @@ model UserInTeam {
   team      Team     @relation(fields: [teamId], references: [id] , onDelete: Cascade)
   taskAssigned UserTask[]
   comments Comment[]
-  @@unique([userId, teamId])
+
+  @@unique([userId,teamId])
   @@index([userId])
   @@index([teamId])
   @@map("user_in_teams")
@@ -126,6 +127,7 @@ model Comment {
 enum Role {
   LEADER
   MEMBER
+  OWNER
 }
 enum SystemRole {
   SYSTEMUSER

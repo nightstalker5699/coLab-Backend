@@ -1,27 +1,16 @@
-import { Iuser } from "../types/entitiesTypes";
+import { IUser } from "../types/entitiesTypes";
 import { createUserType } from "../types/userTypes";
 import UserService from "./user.service";
 import appError from "../helpers/appError";
-import User from "../middlewares/prisma/user.middleware";
+import client from "../middlewares/prisma/user.middleware";
 import bcrypt from "bcrypt";
 import { checkEncryption } from "../helpers/checkEncryption";
 import { catchAuthAsync } from "../helpers/catchAsync";
-/**
- * @desc AuthService for handling user authentication
- * @class AuthService
- * @static
- * @method signup - Registers a new user
- * @param {createUserType} userData - The user data for registration
- * @throws {appError} - Throws an error if the user already exists
- * @return {Promise<UserObject>} - Returns a promise that resolves to a UserObject
- * @method login - Logs in an existing user
- * @throws {appError} - Throws an error if the user already exists
- * @return {Promise<UserObject>} - Returns a promise that resolves to a UserObject
- *
- * */
+
+const User = client.user;
 
 export default class AuthService {
-  static async signup(userData: createUserType): Promise<Iuser> {
+  static async signup(userData: createUserType): Promise<IUser> {
     // Check if user already exists
 
     if (await UserService.checkUsed({ where: { email: userData.email } })) {
@@ -44,7 +33,7 @@ export default class AuthService {
 
     userData.password = await bcrypt.hash(userData.password, 12);
     // Create new user
-    const user: Iuser = await User.create({
+    const user: IUser = await User.create({
       data: userData,
     });
 
@@ -57,7 +46,7 @@ export default class AuthService {
     done: any
   ) {
     try {
-      const user: Iuser | null = await User.findFirst({
+      const user: IUser | null = await User.findFirst({
         where: {
           OR: [{ username: identifier }, { email: identifier }],
         },

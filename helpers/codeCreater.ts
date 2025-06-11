@@ -1,6 +1,6 @@
 import { randomInt } from "crypto";
 import { PrismaClient } from "@prisma/client";
-
+import client from "../middlewares/prisma/user.middleware";
 const characters = "QWERTYUIOPASDFGHJKLZXCVBNM0987654321";
 const codeCreator = async (
   length: number,
