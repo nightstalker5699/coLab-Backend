@@ -1,4 +1,6 @@
 /node_modules
 *.env
 Dockerfile.dev
+Dockerfile.front
 docker-compose.dev.yml
+docker-compose.front.yml
