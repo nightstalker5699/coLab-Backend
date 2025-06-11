@@ -4,7 +4,6 @@ import AppError from "../helpers/appError";
 import { Request, Response, NextFunction } from "express";
 import { Iuser, IuserInTeam } from "../types/entitiesTypes";
 import { createTeamType } from "../types/teamTypes";
-import { join } from "path";
 
 export const createTeam = catchReqAsync(
   async (req: Request, res: Response, next: NextFunction) => {
