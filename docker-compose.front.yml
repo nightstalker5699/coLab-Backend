@@ -14,7 +14,7 @@ services:
     depends_on:
       - postgres
   postgres:
-    image: postgres:latest
+    image: postgres:16.2
     environment:
       POSTGRES_USER: night
       POSTGRES_PASSWORD: bomb
