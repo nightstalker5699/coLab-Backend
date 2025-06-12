@@ -3,9 +3,11 @@ import { catchReqAsync } from "../helpers/catchAsync";
 import appError from "../helpers/appError";
 import { Response, NextFunction } from "express";
 import { ITeam, IUser, IUserInTeam } from "../types/entitiesTypes";
-import { createTeamType } from "../types/teamTypes";
+import { changeRoleSchema, CreateTeamSchema } from "../types/teamTypes";
 import { Role } from "@prisma/client";
 import { IRequest } from "../types/generalTypes";
+import ValidateInput from "../helpers/ValidateInput";
+
 const teamObjectFormatter = (team: ITeam, userId: string) => {
   return {
     teamName: team.teamName,
@@ -26,19 +28,18 @@ const teamObjectFormatter = (team: ITeam, userId: string) => {
 
 export const createTeam = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
-    const data: createTeamType = req.body;
-    if (!data.teamData.teamName) {
-      return next(
-        new appError("you must insert a team", 400, "ValidationError")
-      );
-    }
+    const data = ValidateInput(req, CreateTeamSchema);
+
     const team = await teamService.createTeam(req.user as IUser, data);
+
     if (data.members) {
       const rows: IUserInTeam[] = data.members.map((row) => {
         return { userId: row, teamId: team.id } as IUserInTeam;
       });
+
       await teamService.addMembers(rows);
     }
+
     res.status(200).json({
       status: "success",
       data: team,
@@ -49,6 +50,7 @@ export const createTeam = catchReqAsync(
 export const getMyTeams = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
     const teams = await teamService.getMyTeams(req.user?.id as string);
+
     res.status(200).json({
       status: "success",
       data: {
@@ -61,6 +63,7 @@ export const getMyTeams = catchReqAsync(
 export const joinTeam = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
     const { joinCode } = req.body;
+
     if (!joinCode) {
       return next(
         new appError(
@@ -70,6 +73,7 @@ export const joinTeam = catchReqAsync(
         )
       );
     }
+
     const updatedTeam = await teamService.joinTeam(req.user as IUser, joinCode);
 
     res.status(200).json({
@@ -81,21 +85,12 @@ export const joinTeam = catchReqAsync(
 
 export const changeRole = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
-    const { relationId } = req.params;
-    const roleChange = req.body.role;
-    if (!relationId) {
-      return next(new appError("user not found with this team", 404));
-    }
-    if (!Object.values(Role).includes(roleChange)) {
-      return next(new appError("you can only change to certain roles", 400));
-    }
-    if (roleChange === "OWNER") {
-      return next(new appError("you can't change role to owner", 400));
-    }
-    if (req.userInTeam?.id === relationId) {
+    const data = ValidateInput(req, changeRoleSchema);
+
+    if (req.userInTeam?.id === data.relationId) {
       return next(new appError("you can't change your role", 400));
     }
-    const userRelation = await teamService.changeRole(relationId, roleChange);
+    const userRelation = await teamService.changeRole(data);
     res.status(200).json({
       status: "success",
       data: { userRole: userRelation },

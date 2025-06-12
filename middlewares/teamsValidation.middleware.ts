@@ -4,15 +4,16 @@ import appError from "../helpers/appError";
 import { IRequest } from "../types/generalTypes";
 import TeamService from "../services/team.service";
 import { ITeam } from "../types/entitiesTypes";
+import { validateId } from "../helpers/ValidateInput";
+import { ZodError } from "zod";
 
 export const checkTeamId = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
     const { teamId } = req.params;
-    if (!teamId) {
+    if (!teamId || (await validateId.safeParseAsync(teamId)).success == false) {
       return next(new appError("invalid team id", 400));
     }
     const team = await TeamService.getTeam(teamId, {});
-    console.log(team);
     req.team = team;
     next();
   }

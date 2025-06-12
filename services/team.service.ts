@@ -1,15 +1,18 @@
 import { Role, Prisma, PrismaClient } from "@prisma/client";
 import { IUser, ITeam, IUserInTeam } from "../types/entitiesTypes";
-import { createTeamType } from "../types/teamTypes";
+import { changeRoleSchema, CreateTeamSchema } from "../types/teamTypes";
 import appError from "../helpers/appError";
 import codeCreator from "../helpers/codeCreater";
 import client from "../middlewares/prisma/user.middleware";
-
+import { z } from "zod";
 export default class TeamService {
   static async checkExist(query: Prisma.TeamCountArgs): Promise<boolean> {
     return (await client.team.count(query)) > 0;
   }
-  static async createTeam(user: IUser, data: createTeamType): Promise<ITeam> {
+  static async createTeam(
+    user: IUser,
+    data: z.infer<typeof CreateTeamSchema>
+  ): Promise<ITeam> {
     const code = await codeCreator(
       10,
       client as PrismaClient,
@@ -102,13 +105,13 @@ export default class TeamService {
     });
     return teams;
   }
-  static async changeRole(id: string, role: Role) {
+  static async changeRole(data: z.infer<typeof changeRoleSchema>) {
     const userTeam = await client.userInTeam.update({
       where: {
-        id,
+        id: data.relationId,
       },
       data: {
-        role,
+        role: data.role,
       },
     });
 

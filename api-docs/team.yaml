@@ -290,7 +290,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-  /api/teams/{teamId}/changeRole/{relationId}:
+  /api/teams/{teamId}/changeRole:
     patch:
       summary: Change user role in team
       description: Change the role of a specific user within a team using the user-team relationship ID. Only team owners can perform this action. Cannot change role to OWNER.
@@ -306,14 +306,6 @@ paths:
           schema:
             type: string
             example: "relation-uuid-123"
-
-        - name: relationId
-          in: path
-          required: true
-          description: Unique identifier of the user-team relationship
-          schema:
-            type: string
-            example: "relation-uuid-123"
       requestBody:
         required: true
         content:
@@ -325,10 +317,12 @@ paths:
                 summary: Change user role to MEMBER
                 value:
                   role: "MEMBER"
+                  relationId: "8a8f6a42-79ce-4c10-b11b-085a11ab6599"
               change_to_leader:
                 summary: Change user role to LEADER
                 value:
                   role: "LEADER"
+                  relationId: "8a8f6a42-79ce-4c10-b11b-085a11ab6599"
       responses:
         "200":
           description: User role changed successfully

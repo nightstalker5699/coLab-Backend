@@ -17,7 +17,7 @@ const router = express.Router();
 router.route("/").get(getMyTeams).post(createTeam);
 router.post("/joinTeam", joinTeam);
 router.patch(
-  "/:teamId/changeRole/:relationId",
+  "/:teamId/changeRole",
   checkTeamId,
   doesHeBelong,
   requireOwner,
