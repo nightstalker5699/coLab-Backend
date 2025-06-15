@@ -3,11 +3,11 @@ import { IRequest } from "../types/generalTypes";
 import appError from "./appError";
 
 const ValidateInput = <T extends ZodSchema>(
-  req: IRequest,
+  input: any,
   zodSchema: T
 ): z.infer<T> => {
   try {
-    const data = zodSchema.parse(req.body);
+    const data = zodSchema.parse(input);
     return data;
   } catch (err) {
     if (err instanceof ZodError) {

@@ -1,11 +1,13 @@
 import { IUser } from "../types/entitiesTypes";
-import { createUserType } from "../types/userTypes";
+import { createUserType, loginSchema } from "../types/userTypes";
 import UserService from "./user.service";
 import appError from "../helpers/appError";
 import client from "../middlewares/prisma/user.middleware";
 import bcrypt from "bcrypt";
 import { checkEncryption } from "../helpers/checkEncryption";
 import { catchAuthAsync } from "../helpers/catchAsync";
+import { ZodError } from "zod";
+import ValidateInput from "../helpers/ValidateInput";
 
 const User = client.user;
 
@@ -46,16 +48,18 @@ export default class AuthService {
     done: any
   ) {
     try {
+      const data = ValidateInput({ identifier, password }, loginSchema);
+
       const user: IUser | null = await User.findFirst({
         where: {
-          OR: [{ username: identifier }, { email: identifier }],
+          OR: [{ username: data.identifier }, { email: data.identifier }],
         },
         omit: { password: false },
       });
       if (!user) {
         return done(new appError("User not Found", 404, "NotFound"), false);
       }
-      if (!checkEncryption(password, user.password as string)) {
+      if (!checkEncryption(data.password, user.password as string)) {
         return done(
           new appError("password is incorrect", 401, "ValidationError"),
           false

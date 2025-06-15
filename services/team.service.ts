@@ -4,15 +4,13 @@ import { changeRoleSchema, CreateTeamSchema } from "../types/teamTypes";
 import appError from "../helpers/appError";
 import codeCreator from "../helpers/codeCreater";
 import client from "../middlewares/prisma/user.middleware";
-import { z } from "zod";
+import { changeRoleInputType, CreateTeamType } from "../types/teamTypes";
+
 export default class TeamService {
   static async checkExist(query: Prisma.TeamCountArgs): Promise<boolean> {
     return (await client.team.count(query)) > 0;
   }
-  static async createTeam(
-    user: IUser,
-    data: z.infer<typeof CreateTeamSchema>
-  ): Promise<ITeam> {
+  static async createTeam(user: IUser, data: CreateTeamType): Promise<ITeam> {
     const code = await codeCreator(
       10,
       client as PrismaClient,
@@ -105,7 +103,7 @@ export default class TeamService {
     });
     return teams;
   }
-  static async changeRole(data: z.infer<typeof changeRoleSchema>) {
+  static async changeRole(data: changeRoleInputType) {
     const userTeam = await client.userInTeam.update({
       where: {
         id: data.relationId,

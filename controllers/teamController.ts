@@ -4,7 +4,7 @@ import appError from "../helpers/appError";
 import { Response, NextFunction } from "express";
 import { ITeam, IUser, IUserInTeam } from "../types/entitiesTypes";
 import { changeRoleSchema, CreateTeamSchema } from "../types/teamTypes";
-import { Role } from "@prisma/client";
+import { z } from "zod";
 import { IRequest } from "../types/generalTypes";
 import ValidateInput from "../helpers/ValidateInput";
 
@@ -28,7 +28,7 @@ const teamObjectFormatter = (team: ITeam, userId: string) => {
 
 export const createTeam = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
-    const data = ValidateInput(req, CreateTeamSchema);
+    const data = ValidateInput(req.body, CreateTeamSchema);
 
     const team = await teamService.createTeam(req.user as IUser, data);
 
@@ -62,19 +62,9 @@ export const getMyTeams = catchReqAsync(
 
 export const joinTeam = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
-    const { joinCode } = req.body;
+    const data = ValidateInput(req.body, z.string().min(10).max(10));
 
-    if (!joinCode) {
-      return next(
-        new appError(
-          "you must input a code to join a team",
-          400,
-          "ValidationError"
-        )
-      );
-    }
-
-    const updatedTeam = await teamService.joinTeam(req.user as IUser, joinCode);
+    const updatedTeam = await teamService.joinTeam(req.user as IUser, data);
 
     res.status(200).json({
       status: "success",
@@ -85,7 +75,7 @@ export const joinTeam = catchReqAsync(
 
 export const changeRole = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
-    const data = ValidateInput(req, changeRoleSchema);
+    const data = ValidateInput(req.body, changeRoleSchema);
 
     if (req.userInTeam?.id === data.relationId) {
       return next(new appError("you can't change your role", 400));

@@ -19,3 +19,7 @@ export const changeRoleSchema = z.object({
   }),
   relationId: z.string().uuid(),
 });
+
+export type CreateTeamType = z.infer<typeof CreateTeamSchema>;
+
+export type changeRoleInputType = z.infer<typeof changeRoleSchema>;

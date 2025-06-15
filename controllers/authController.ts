@@ -2,33 +2,15 @@ import { Response, NextFunction } from "express";
 import { catchReqAsync, loginAsync } from "../helpers/catchAsync";
 import appError from "../helpers/appError";
 import AuthService from "../services/auth.service";
-import { createUserType } from "../types/userTypes";
+import { createUserType, signupSchema } from "../types/userTypes";
 import { Strategy as githubStrategy } from "passport-github2";
 import { Strategy as googleStrategy } from "passport-google-oauth20";
 import { Strategy as localStrategy } from "passport-local";
 import { IRequest } from "../types/generalTypes";
+import ValidateInput from "../helpers/ValidateInput";
 export const signup = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
-    const userData: createUserType = req.body;
-    const { email, password, username } = userData;
-    // Validate email format
-    if (!email || !email.includes("@"))
-      throw new appError("Valid email is required", 400, "ValidationError");
-
-    // Validate password strength
-    if (!password || password.length < 6)
-      throw new appError(
-        "Password must be at least 6 characters",
-        400,
-        "ValidationError"
-      );
-    if (!username || username.length === 0 || username.includes(" ")) {
-      throw new appError(
-        "Username is required and cannot contain spaces",
-        400,
-        "ValidationError"
-      );
-    }
+    const userData = ValidateInput(req.body, signupSchema);
 
     const newUser = await AuthService.signup(userData);
     newUser.password = ""; // Don't return password in response

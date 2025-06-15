@@ -2,9 +2,14 @@ import { Response, NextFunction } from "express";
 import { catchReqAsync, loginAsync } from "../helpers/catchAsync";
 import appError from "../helpers/appError";
 import userService from "../services/user.service";
-import { partialUser, updateUserType } from "../types/userTypes";
+import {
+  partialUser,
+  updateUserSchema,
+  updateUserType,
+} from "../types/userTypes";
 import { IUser } from "../types/entitiesTypes";
 import { IRequest } from "../types/generalTypes";
+import ValidateInput from "../helpers/ValidateInput";
 export const getMe = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
     return res.status(200).json({
@@ -34,15 +39,10 @@ export const getUser = catchReqAsync(
 
 export const updateMe = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
-    const theUpdate: updateUserType = req.body;
-    if (!theUpdate) {
-      return next(
-        new appError("you can't update nothing", 400, "ValidationError")
-      );
-    }
+    const data = ValidateInput(req.body, updateUserSchema);
     const userObj: IUser = await userService.updateUser(
       req.user as IUser,
-      theUpdate
+      data
     );
     await loginAsync(req, userObj);
     res.status(200).json({
