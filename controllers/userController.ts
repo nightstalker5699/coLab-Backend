@@ -10,6 +10,7 @@ import {
 import { IUser } from "../types/entitiesTypes";
 import { IRequest } from "../types/generalTypes";
 import ValidateInput from "../helpers/ValidateInput";
+import { fileRemover, fileuploader } from "../helpers/image.handle";
 export const getMe = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
     return res.status(200).json({
@@ -140,3 +141,24 @@ export const getUsers = catchReqAsync(
     });
   }
 );
+export const updatePhoto = catchReqAsync(async (req, res, next) => {
+  if (!req.file) {
+    return next(new appError("you must upload an image", 400));
+  }
+
+  const key = `${process.env.R2_BUCKET_PUBLIC_URL}/images/${Date.now()}-${
+    req.file.originalname
+  }`;
+
+  // service to update image link
+  const updated = await userService.updateImg(req.user?.id as string, key);
+
+  const img = key.split("/");
+  await fileuploader(req.file, img.pop() as string, "images");
+  if (
+    req.user?.photo !==
+    `${process.env.R2_BUCKET_PUBLIC_URL}/images/default.jpeg`
+  ) {
+    await fileRemover(req.user?.photo as string);
+  }
+});

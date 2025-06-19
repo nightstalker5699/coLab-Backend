@@ -17,7 +17,7 @@ model User {
   githubId String? @unique @db.VarChar(255)
   createdAt DateTime @default(now())
   updatedPasswordAt DateTime?
-  photo    String? @db.VarChar(100)
+  photo    String @db.VarChar(100)
   isdeleted Boolean  @default(false)
   role      SystemRole @default(SYSTEMUSER)
   resetToken ResetCode[]

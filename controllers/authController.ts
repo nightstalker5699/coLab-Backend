@@ -2,18 +2,28 @@ import { Response, NextFunction } from "express";
 import { catchReqAsync, loginAsync } from "../helpers/catchAsync";
 import appError from "../helpers/appError";
 import AuthService from "../services/auth.service";
-import { createUserType, signupSchema } from "../types/userTypes";
+import { signupSchema } from "../types/userTypes";
 import { Strategy as githubStrategy } from "passport-github2";
 import { Strategy as googleStrategy } from "passport-google-oauth20";
 import { Strategy as localStrategy } from "passport-local";
 import { IRequest } from "../types/generalTypes";
 import ValidateInput from "../helpers/ValidateInput";
+import { fileuploader } from "../helpers/image.handle";
 export const signup = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
+    req.body.photo = !req.file
+      ? process.env.DEFAULT_PFP
+      : `${process.env.R2_BUCKET_PUBLIC_URL}/images/${Date.now()}-${
+          req.file.originalname
+        }`;
     const userData = ValidateInput(req.body, signupSchema);
 
     const newUser = await AuthService.signup(userData);
-    newUser.password = ""; // Don't return password in response
+    if (newUser.photo !== process.env.DEFAULT_PFP) {
+      const img = newUser.photo.split("/");
+      await fileuploader(req.file, img.pop() as string, "images");
+    }
+    newUser.password = null; // Don't return password in response
     await loginAsync(req, newUser);
     res.status(201).json({
       status: "success",

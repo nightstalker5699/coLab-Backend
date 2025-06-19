@@ -2,12 +2,13 @@ import express, { Request, Response } from "express";
 import passport, { authhandler } from "../helpers/authhandler";
 
 import { logout, signup } from "../controllers/authController";
+import { imageHandle } from "../helpers/image.handle";
 
 const router = express.Router();
 
 // local authentication
 router.post("/login", authhandler("local"));
-router.post("/signup", signup);
+router.post("/signup", imageHandle.single("photo"), signup);
 
 // google authentication
 router.get(

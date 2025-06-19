@@ -23,8 +23,6 @@ app.use(express.json()); // conver json to req object
 
 app.use(express.urlencoded({ extended: true }));
 
-app.use(express.static(path.join(__dirname, "static")));
-
 app.use(session);
 
 app.use(passport.initialize());
@@ -34,12 +32,10 @@ app.use(passport.session()); // Initialize passport session
 app.use(cookieParser());
 
 app.use(validateSession); // Middleware to validate user session
-
 app.use("/api", authRouter);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(protect);
-
 app.use("/api/users", UserRouter);
 app.use("/api/teams", teamRouter);
 

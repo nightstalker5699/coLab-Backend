@@ -8,6 +8,7 @@ export const signupSchema = z.object({
     .regex(/^[a-zA-Z0-9]/, "please do not use any special characters"),
   email: z.string().email("please insert valid email"),
   password: z.string().min(6, "the password must have 6 or more characters"),
+  photo: z.string(),
 });
 
 export type createUserType = z.infer<typeof signupSchema>;

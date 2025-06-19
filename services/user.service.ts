@@ -103,4 +103,15 @@ export default class UserService {
     });
     return deletedUser;
   }
+  static async updateImg(userId: string, imgUrl: string): Promise<IUser> {
+    const updated = await User.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        photo: imgUrl,
+      },
+    });
+    return updated;
+  }
 }

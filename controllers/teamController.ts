@@ -62,9 +62,12 @@ export const getMyTeams = catchReqAsync(
 
 export const joinTeam = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
-    const data = ValidateInput(req.body, z.string().min(10).max(10));
+    const { code } = req.params;
+    if (z.string().min(10).max(10).safeParse(code).success === false) {
+      return next(new appError("code must be a valid string", 400));
+    }
 
-    const updatedTeam = await teamService.joinTeam(req.user as IUser, data);
+    const updatedTeam = await teamService.joinTeam(req.user as IUser, code);
 
     res.status(200).json({
       status: "success",
@@ -75,6 +78,7 @@ export const joinTeam = catchReqAsync(
 
 export const changeRole = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
+    req.body.relationId = req.params.relationId;
     const data = ValidateInput(req.body, changeRoleSchema);
 
     if (req.userInTeam?.id === data.relationId) {
@@ -111,6 +115,27 @@ export const getTeam = catchReqAsync(
     res.status(200).json({
       message: "success",
       data: { team: formatted },
+    });
+  }
+);
+
+export const kickUserFromTeam = catchReqAsync(
+  async (req: IRequest, res: Response, next: NextFunction) => {
+    const { relationId } = req.params;
+
+    if (z.string().uuid().safeParse(relationId).success === false) {
+      return next(new appError("relationId must be a valid uuid", 400));
+    }
+
+    if (req.userInTeam?.id === relationId) {
+      return next(new appError("you can't kick yourself", 400));
+    }
+
+    const userRelation = await teamService.kickUserFromTeam(relationId);
+
+    res.status(200).json({
+      status: "success",
+      data: { userRole: userRelation },
     });
   }
 );

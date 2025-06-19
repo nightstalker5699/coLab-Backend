@@ -143,4 +143,23 @@ export default class TeamService {
     }
     return team;
   }
+  static async kickUserFromTeam(relationId: string) {
+    try {
+      const userTeam = await client.userInTeam.delete({
+        where: {
+          id: relationId,
+        },
+      });
+      return userTeam;
+    } catch (err: any) {
+      if (err.code === "P2025") {
+        throw new appError("this user doesn't belong to this team", 404);
+      }
+      throw new appError(
+        "an error occurred while trying to kick the user",
+        500,
+        "DatabaseError"
+      );
+    }
+  }
 }
