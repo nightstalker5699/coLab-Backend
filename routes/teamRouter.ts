@@ -6,22 +6,30 @@ import {
   getTeam,
   joinTeam,
   kickUserFromTeam,
+  updateMyTeam,
 } from "../controllers/teamController";
 import {
   checkTeamId,
   doesHeBelong,
   requireOwner,
 } from "../middlewares/teamsValidation.middleware";
-import { imageHandle } from "../helpers/image.handle";
+import { imageHandle, imageToBody } from "../helpers/image.handle";
 const router = express.Router();
 
-router
-  .route("/")
-  .get(getMyTeams)
-  .post(imageHandle.single("teamLogo"), createTeam);
+router.route("/").get(getMyTeams).post(createTeam);
 router.post("/joinTeam/:code", joinTeam);
 
-router.route("/:teamId").get(checkTeamId, doesHeBelong, getTeam);
+router
+  .route("/:teamId")
+  .get(checkTeamId, doesHeBelong, getTeam)
+  .patch(
+    checkTeamId,
+    doesHeBelong,
+    requireOwner,
+    imageHandle.single("teamLogo"),
+    imageToBody("teamLogo", "teamLogos"),
+    updateMyTeam
+  );
 router
   .route("/:teamId/members/:relationId")
   .delete(checkTeamId, doesHeBelong, requireOwner, kickUserFromTeam)

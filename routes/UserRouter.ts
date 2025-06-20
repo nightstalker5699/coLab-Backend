@@ -16,7 +16,7 @@ const UserRouter = Router();
 
 UserRouter.route("/me")
   .get(getMe)
-  .patch(imageHandle.single("photo"), imageToBody, updateMe)
+  .patch(imageHandle.single("photo"), imageToBody("photo", "images"), updateMe)
   .delete(deleteMe);
 UserRouter.route("/mention").get(getUsers);
 UserRouter.route("/:username")
@@ -24,7 +24,7 @@ UserRouter.route("/:username")
   .patch(
     restrictTo("ADMIN"),
     imageHandle.single("photo"),
-    imageToBody,
+    imageToBody("photo", "images"),
     updateUser
   )
   .delete(restrictTo("ADMIN"), deleteUser);

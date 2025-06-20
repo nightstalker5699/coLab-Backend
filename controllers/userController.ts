@@ -3,6 +3,7 @@ import { catchReqAsync, loginAsync } from "../helpers/catchAsync";
 import appError from "../helpers/appError";
 import userService from "../services/user.service";
 import {
+  default_photo,
   partialUser,
   updateUserSchema,
   updateUserType,
@@ -41,23 +42,17 @@ export const getUser = catchReqAsync(
 
 export const updateMe = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
-    let photo;
-    if (req.body.photo) {
-      photo = await fileuploader(req.file, req.body.photo, "images");
-      req.body.photo = `${process.env.R2_BUCKET_PUBLIC_URL}/${photo.key}`;
-    }
     const data = ValidateInput(req.body, updateUserSchema);
 
     const userObj: IUser = await userService.updateUser(
       req.user as IUser,
       data
     );
-    await photo?.client.send(photo.command);
-    if (
-      req.user?.photo !== process.env.DEFAULT_PFP &&
-      req.user?.photo !== userObj.photo
-    ) {
-      await fileRemover(req.user?.photo.split("/").pop() as string, "images");
+
+    if (req.user?.photo !== userObj.photo) {
+      await fileuploader(req.file, req.body.photo);
+      if (req.user?.photo !== default_photo)
+        await fileRemover(req.user?.photo as string);
     }
     await loginAsync(req, userObj);
     res.status(200).json({
@@ -74,11 +69,6 @@ export const updateUser = catchReqAsync(
         new appError("you must use characters", 400, "ValidationError")
       );
     }
-    let photo;
-    if (req.body.photo) {
-      photo = await fileuploader(req.file, req.body.photo, "images");
-      req.body.photo = `${process.env.R2_BUCKET_PUBLIC_URL}/${photo.key}`;
-    }
     const data = ValidateInput(req.body, updateUserSchema);
 
     const user = await userService.getUser({
@@ -88,13 +78,9 @@ export const updateUser = catchReqAsync(
 
     const userObj: IUser = await userService.updateUser(user, data);
 
-    await photo?.client.send(photo.command);
-
-    if (
-      user.photo !== process.env.DEFAULT_PFP &&
-      user.photo !== userObj.photo
-    ) {
-      await fileRemover(user.photo.split("/").pop() as string, "images");
+    if (user.photo !== userObj.photo) {
+      await fileuploader(req.file, req.body.photo);
+      if (user.photo !== default_photo) await fileRemover(user.photo as string);
     }
 
     res.status(200).json({

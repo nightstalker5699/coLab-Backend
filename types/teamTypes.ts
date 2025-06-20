@@ -20,6 +20,23 @@ export const changeRoleSchema = z.object({
   relationId: z.string().uuid(),
 });
 
+export const updateTeamSchema = z.object({
+  teamName: z
+    .string()
+    .max(25, "team name can't be more than 25 characters")
+    .optional(),
+  teamLogo: z.string().optional(),
+  theme: z
+    .string()
+    .max(20, "theme can't be more than 20 characters")
+    .optional(),
+});
+
+export type updateTeamType = z.infer<typeof updateTeamSchema>;
+
 export type CreateTeamType = z.infer<typeof CreateTeamSchema>;
 
 export type changeRoleInputType = z.infer<typeof changeRoleSchema>;
+
+export const default_teamLogo =
+  "https://pub-ff2ca37b533641ffa6a9cffe678a70d6.r2.dev/teamLogos/default.jpeg";

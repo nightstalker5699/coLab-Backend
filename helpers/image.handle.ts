@@ -15,33 +15,37 @@ export const imageHandle = multer({
   },
 });
 
-export const fileuploader = async (file: any, key: string, path: string) => {
+export const fileuploader = async (file: any, key: string) => {
   try {
     let buffer = file.buffer;
 
     if (file.mimetype === "image/jpeg" && file.mimetype === "image/png") {
       buffer = await imageSharp(file.buffer);
     }
-
+    const Key = key.split("/");
+    Key.shift();
     const command = new PutObjectCommand({
       Bucket: process.env.R2_BUCKET_NAME,
-      Key: `${path}/${key}`,
+      Key: Key.join("/"),
       Body: buffer,
       ContentType: file.mimetype,
     });
 
-    return { client: r2Client, key: command.input.Key, command };
+    const response = await r2Client.send(command);
+    return response;
   } catch (error) {
     console.error("Error uploading image:", error);
     throw new Error("Image upload failed");
   }
 };
 
-export const fileRemover = async (fileUrl: string, path: string) => {
+export const fileRemover = async (fileUrl: string) => {
   try {
+    const url = fileUrl.split("/");
+    url.shift();
     const command = new DeleteObjectCommand({
       Bucket: process.env.R2_BUCKET_NAME,
-      Key: `${path}/${fileUrl}`,
+      Key: url.join("/"),
     });
     const response = await r2Client.send(command);
 
@@ -51,10 +55,13 @@ export const fileRemover = async (fileUrl: string, path: string) => {
   }
 };
 
-export const imageToBody = catchReqAsync(async (req, res, next) => {
-  if (req.file) {
-    req.file.originalname = req.file.originalname.split(" ").join("-");
-    req.body.photo = `${Date.now()}-${req.file.originalname}`;
-  }
-  next();
-});
+export const imageToBody = (bodyLocation: string, location: string) =>
+  catchReqAsync(async (req, res, next) => {
+    if (req.file) {
+      req.file.originalname = req.file.originalname.split(" ").join("-");
+      req.body[bodyLocation] = `${
+        process.env.R2_BUCKET_PUBLIC_URL
+      }/${location}/${Date.now()}-${req.file.originalname}`;
+    }
+    next();
+  });

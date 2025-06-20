@@ -38,8 +38,8 @@ model ResetCode {
 
 model Team {
   id       String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  teamName  String @unique @db.VarChar(25)
-  teamLogo String? @db.VarChar(60)
+  teamName  String @db.VarChar(25)
+  teamLogo String? @db.VarChar(100)
   createdAt DateTime   @default(now())
   theme     String?   @db.VarChar(20)
   joinCode String?     @unique @db.VarChar(12)

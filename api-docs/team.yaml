@@ -23,7 +23,7 @@ paths:
       tags:
         - Teams
       summary: Get my teams
-      description: Retrieve all teams where the authenticated user is a member or leader
+      description: Retrieve all teams where the authenticated user is a member
       security:
         - bearerAuth: []
       responses:
@@ -38,64 +38,45 @@ paths:
                     type: string
                     example: success
                   data:
-                    type: array
-                    items:
-                      allOf:
-                        - $ref: "#/components/schemas/Team"
-                        - type: object
-                          properties:
-                            userRole:
-                              type: string
-                              enum: [LEADER, MEMBER]
-                              example: "MEMBER"
-                              description: Current user's role in this team
-                            memberCount:
-                              type: integer
-                              example: 5
-                              description: Total number of members in the team
+                    type: object
+                    properties:
+                      teams:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Team"
               examples:
                 success_response:
                   summary: Successful teams retrieval
                   value:
                     status: success
                     data:
-                      - id: "team123"
-                        teamName: "Development Team"
-                        teamLogo: "https://example.com/logo.png"
-                        theme: "blue"
-                        joinCode: "ABC123XYZ"
-                        userRole: "LEADER"
-                        memberCount: 3
-                        createdAt: "2024-01-15T10:30:00Z"
-                        updatedAt: "2024-01-15T10:30:00Z"
-                      - id: "team456"
-                        teamName: "Marketing Team"
-                        teamLogo: "https://example.com/marketing-logo.png"
-                        theme: "green"
-                        joinCode: "DEF456ABC"
-                        userRole: "MEMBER"
-                        memberCount: 7
-                        createdAt: "2024-01-10T14:20:00Z"
-                        updatedAt: "2024-01-12T09:15:00Z"
+                      teams:
+                        - id: "team123"
+                          teamName: "Development Team"
+                          teamLogo: "https://example.com/logo.png"
+                          theme: "blue"
+                          joinCode: "ABC123XYZ0"
+                          createdAt: "2024-01-15T10:30:00Z"
+                          updatedAt: "2024-01-15T10:30:00Z"
+                        - id: "team456"
+                          teamName: "Marketing Team"
+                          teamLogo: "https://example.com/marketing-logo.png"
+                          theme: "green"
+                          joinCode: "DEF456ABC1"
+                          createdAt: "2024-01-10T14:20:00Z"
+                          updatedAt: "2024-01-12T09:15:00Z"
                 empty_response:
                   summary: No teams found
                   value:
                     status: success
-                    data: []
+                    data:
+                      teams: []
         "401":
           description: Unauthorized - Authentication required
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-              examples:
-                unauthorized:
-                  summary: Authentication required
-                  value:
-                    status: error
-                    message: "Authentication required"
-                    errorType: "AuthenticationError"
-                    statusCode: 401
         "500":
           description: Internal server error
           content:
@@ -107,7 +88,7 @@ paths:
       tags:
         - Teams
       summary: Create a new team
-      description: Create a new team with optional members. The authenticated user becomes the team leader.
+      description: Create a new team with optional members. The authenticated user becomes the team owner.
       security:
         - bearerAuth: []
       requestBody:
@@ -161,18 +142,18 @@ paths:
                       teamName: "Development Team"
                       teamLogo: "https://example.com/logo.png"
                       theme: "blue"
-                      joinCode: "ABC123XYZ"
+                      joinCode: "ABC123XYZ0"
                       createdAt: "2024-01-15T10:30:00Z"
                       updatedAt: "2024-01-15T10:30:00Z"
         "400":
-          description: Validation error - Team name is required
+          description: Validation error or database error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
               examples:
-                missing_team_name:
-                  summary: Missing team name
+                validation_error:
+                  summary: Validation error
                   value:
                     status: error
                     message: "you must insert a team"
@@ -191,21 +172,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-              examples:
-                unauthorized:
-                  summary: Authentication required
-                  value:
-                    status: error
-                    message: "Authentication required"
-                    errorType: "AuthenticationError"
-                    statusCode: 401
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /api/teams/joinTeam:
+
+  /api/teams/joinTeam/{code}:
     post:
       summary: Join a team using a join code
       description: Allows an authenticated user to join an existing team by providing a valid join code
@@ -213,119 +187,19 @@ paths:
         - Teams
       security:
         - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/JoinTeamRequest"
-            examples:
-              valid_request:
-                summary: Valid join team request
-                value:
-                  joinCode: "ABC123XYZ0"
+      parameters:
+        - name: code
+          in: path
+          required: true
+          description: Join code for the team (exactly 10 characters)
+          schema:
+            type: string
+            minLength: 10
+            maxLength: 10
+            example: "ABC123XYZ0"
       responses:
         "200":
           description: Successfully joined the team
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JoinTeamResponse"
-              examples:
-                success_response:
-                  summary: Successful team join
-                  value:
-                    status: "sucess"
-                    data:
-                      team:
-                        id: "team-uuid-123"
-                        teamName: "Development Team"
-                        joinCode: "ABC123XYZ0"
-                        createdAt: "2024-01-15T10:30:00Z"
-                        updatedAt: "2024-01-15T10:30:00Z"
-                        userInTeams:
-                          - user:
-                              id: "user-uuid-456"
-                              name: "John Doe"
-                              email: "john@example.com"
-                          - user:
-                              id: "user-uuid-789"
-                              name: "Jane Smith"
-                              email: "jane@example.com"
-        "400":
-          description: Bad request - Missing or invalid join code
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-              examples:
-                missing_code:
-                  summary: Missing join code
-                  value:
-                    status: "error"
-                    message: "you must input a code to join a team"
-                    errorType: "ValidationError"
-        "404":
-          description: Team not found - Invalid join code
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-              examples:
-                invalid_code:
-                  summary: Invalid join code
-                  value:
-                    status: "error"
-                    message: "This code doesn't belong to a team"
-                    errorType: "ValidationError"
-        "401":
-          description: Unauthorized - Authentication required
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-  /api/teams/{teamId}/changeRole:
-    patch:
-      summary: Change user role in team
-      description: Change the role of a specific user within a team using the user-team relationship ID. Only team owners can perform this action. Cannot change role to OWNER.
-      tags:
-        - Teams
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: teamId
-          in: path
-          required: true
-          description: Unique identifier of the team
-          schema:
-            type: string
-            example: "relation-uuid-123"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ChangeRoleRequest"
-            examples:
-              change_to_member:
-                summary: Change user role to MEMBER
-                value:
-                  role: "MEMBER"
-                  relationId: "8a8f6a42-79ce-4c10-b11b-085a11ab6599"
-              change_to_leader:
-                summary: Change user role to LEADER
-                value:
-                  role: "LEADER"
-                  relationId: "8a8f6a42-79ce-4c10-b11b-085a11ab6599"
-      responses:
-        "200":
-          description: User role changed successfully
           content:
             application/json:
               schema:
@@ -337,90 +211,77 @@ paths:
                   data:
                     type: object
                     properties:
-                      userRole:
-                        $ref: "#/components/schemas/UserInTeam"
+                      team:
+                        $ref: "#/components/schemas/TeamWithMembers"
               examples:
                 success_response:
-                  summary: Successful role change
+                  summary: Successful team join
                   value:
-                    status: success
+                    status: "success"
                     data:
-                      userRole:
-                        id: "relation-uuid-123"
-                        userId: "user-uuid-456"
-                        teamId: "team-uuid-123"
-                        role: "LEADER"
+                      team:
+                        id: "team-uuid-123"
+                        teamName: "Development Team"
+                        teamLogo: "https://example.com/logo.png"
+                        theme: "blue"
+                        joinCode: "ABC123XYZ0"
                         createdAt: "2024-01-15T10:30:00Z"
-                        updatedAt: "2024-01-15T12:45:00Z"
+                        updatedAt: "2024-01-15T10:30:00Z"
+                        userInTeams:
+                          - user:
+                              username: "john_doe"
+                              email: "john@example.com"
+                              photo: "https://example.com/photos/john.jpg"
+                          - user:
+                              username: "jane_smith"
+                              email: "jane@example.com"
+                              photo: "https://example.com/photos/jane.jpg"
         "400":
-          description: Bad request - Invalid role or attempting to change to OWNER
+          description: Bad request - Invalid join code format or user already in team
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/Error"
               examples:
-                invalid_role:
-                  summary: Invalid role specified
+                invalid_code_format:
+                  summary: Invalid code format
                   value:
-                    status: error
-                    message: "you can only change to certain roles"
+                    status: "error"
+                    message: "code must be a valid string"
+                    statusCode: 400
+                already_member:
+                  summary: User already in team
+                  value:
+                    status: "error"
+                    message: "you already in this team"
                     errorType: "ValidationError"
                     statusCode: 400
-                owner_role_attempt:
-                  summary: Attempting to change role to OWNER
-                  value:
-                    status: error
-                    message: "you can' change role to owner"
-                    errorType: "ValidationError"
-                    statusCode: 400
-        "401":
-          description: Unauthorized - Only team owners can change roles
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-              examples:
-                not_owner:
-                  summary: User is not team owner
-                  value:
-                    status: error
-                    message: "only OWNER can change role of the team"
-                    errorType: "AuthorizationError"
-                    statusCode: 401
-                unauthorized:
-                  summary: Authentication required
-                  value:
-                    status: error
-                    message: "Authentication required"
-                    errorType: "AuthenticationError"
-                    statusCode: 401
         "404":
-          description: User-team relationship not found
+          description: Team not found - Invalid join code
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/Error"
               examples:
-                not_found:
-                  summary: Relationship not found
+                invalid_code:
+                  summary: Invalid join code
                   value:
-                    status: error
-                    message: "no team or user with that id"
-                    errorType: "NotFoundError"
+                    status: "error"
+                    message: "This code doesn't belong to a team"
+                    errorType: "ValidationError"
                     statusCode: 404
-                user_not_in_team:
-                  summary: User not in team
-                  value:
-                    status: error
-                    message: "this user doesn't belong to this team"
-                    errorType: "NotFoundError"
-                    statusCode: 404
+        "401":
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/Error"
 
   /api/teams/{teamId}:
     get:
@@ -437,6 +298,7 @@ paths:
           description: Unique identifier of the team
           schema:
             type: string
+            format: uuid
             example: "team-uuid-123"
       responses:
         "200":
@@ -486,7 +348,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/Error"
               examples:
                 no_access:
                   summary: No access to team
@@ -495,35 +357,298 @@ paths:
                     message: "you do not have access to this team"
                     errorType: "AuthorizationError"
                     statusCode: 401
-                unauthorized:
-                  summary: Authentication required
-                  value:
-                    status: error
-                    message: "Authentication required"
-                    errorType: "AuthenticationError"
-                    statusCode: 401
         "404":
           description: Team not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/Error"
               examples:
-                invalid_team_id:
-                  summary: Invalid team ID
+                team_not_found:
+                  summary: Team not found
                   value:
                     status: error
-                    message: "teamId Invalid"
-                    errorType: "NotFoundError"
+                    message: "there is no team with that ID"
                     statusCode: 404
         "500":
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/Error"
+
+    patch:
+      tags:
+        - Teams
+      summary: Update team details
+      description: Update team information. Only team owners can perform this action. Supports file upload for team logo.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          description: Unique identifier of the team
+          schema:
+            type: string
+            format: uuid
+            example: "team-uuid-123"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/UpdateTeamRequest"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTeamRequest"
+      responses:
+        "200":
+          description: Team updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      team:
+                        $ref: "#/components/schemas/Team"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized - Only team owners can update
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Team not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/teams/{teamId}/members/{relationId}:
+    patch:
+      summary: Change user role in team
+      description: Change the role of a specific user within a team using the user-team relationship ID. Only team owners can perform this action. Cannot change role to OWNER.
+      tags:
+        - Teams
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          description: Unique identifier of the team
+          schema:
+            type: string
+            format: uuid
+            example: "team-uuid-123"
+        - name: relationId
+          in: path
+          required: true
+          description: Unique identifier of the user-team relationship
+          schema:
+            type: string
+            format: uuid
+            example: "relation-uuid-456"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangeRoleRequest"
+            examples:
+              change_to_member:
+                summary: Change user role to MEMBER
+                value:
+                  role: "MEMBER"
+              change_to_leader:
+                summary: Change user role to LEADER
+                value:
+                  role: "LEADER"
+      responses:
+        "200":
+          description: User role changed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      userRole:
+                        $ref: "#/components/schemas/UserInTeam"
+              examples:
+                success_response:
+                  summary: Successful role change
+                  value:
+                    status: success
+                    data:
+                      userRole:
+                        id: "relation-uuid-456"
+                        userId: "user-uuid-456"
+                        teamId: "team-uuid-123"
+                        role: "LEADER"
+                        createdAt: "2024-01-15T10:30:00Z"
+                        updatedAt: "2024-01-15T12:45:00Z"
+        "400":
+          description: Bad request - Invalid role, attempting to change own role, or validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                invalid_relation_id:
+                  summary: Invalid relation ID
+                  value:
+                    status: error
+                    message: "relationId must be a valid uuid"
+                    statusCode: 400
+                change_own_role:
+                  summary: Attempting to change own role
+                  value:
+                    status: error
+                    message: "you can't change your role"
+                    statusCode: 400
+        "401":
+          description: Unauthorized - Only team owners can change roles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: User-team relationship not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                not_found:
+                  summary: Relationship not found
+                  value:
+                    status: error
+                    message: "this user doesn't belong to this team"
+                    statusCode: 404
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      summary: Kick user from team
+      description: Remove a user from the team. Only team owners can perform this action. Cannot kick yourself.
+      tags:
+        - Teams
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          description: Unique identifier of the team
+          schema:
+            type: string
+            format: uuid
+            example: "team-uuid-123"
+        - name: relationId
+          in: path
+          required: true
+          description: Unique identifier of the user-team relationship
+          schema:
+            type: string
+            format: uuid
+            example: "relation-uuid-456"
+      responses:
+        "200":
+          description: User kicked from team successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      userRole:
+                        $ref: "#/components/schemas/UserInTeam"
+        "400":
+          description: Bad request - Invalid relation ID or attempting to kick yourself
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                invalid_relation_id:
+                  summary: Invalid relation ID
+                  value:
+                    status: error
+                    message: "relationId must be a valid uuid"
+                    statusCode: 400
+                kick_yourself:
+                  summary: Attempting to kick yourself
+                  value:
+                    status: error
+                    message: "you can't kick yourself"
+                    statusCode: 400
+        "401":
+          description: Unauthorized - Only team owners can kick users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: User-team relationship not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                not_found:
+                  summary: Relationship not found
+                  value:
+                    status: error
+                    message: "this user doesn't belong to this team"
+                    statusCode: 404
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     ChangeRoleRequest:
       type: object
@@ -565,15 +690,39 @@ components:
           type: array
           items:
             type: string
-          example: ["user1", "user2", "user3"]
+            format: uuid
+          example:
+            [
+              "2048691a-3c81-4f6f-b806-28c356daae93",
+              "bed92681-fd28-4801-8335-7fdaf45ce386",
+            ]
           description: Array of user IDs to add as initial team members
+
+    UpdateTeamRequest:
+      type: object
+      properties:
+        teamName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Updated Team Name"
+          description: The new name of the team
+        teamLogo:
+          type: string
+          format: binary
+          description: Team logo image file (when using multipart/form-data)
+        theme:
+          type: string
+          example: "red"
+          description: New theme color for the team
 
     Team:
       type: object
       properties:
         id:
           type: string
-          example: "team123"
+          format: uuid
+          example: "team-uuid-123"
           description: Unique identifier for the team
         teamName:
           type: string
@@ -590,8 +739,8 @@ components:
           description: Theme color for the team
         joinCode:
           type: string
-          example: "ABC123XYZ"
-          description: Unique code for joining the team
+          example: "ABC123XYZ0"
+          description: Unique code for joining the team (10 characters)
         createdAt:
           type: string
           format: date-time
@@ -603,24 +752,52 @@ components:
           example: "2024-01-15T10:30:00Z"
           description: Timestamp when the team was last updated
 
+    TeamWithMembers:
+      allOf:
+        - $ref: "#/components/schemas/Team"
+        - type: object
+          properties:
+            userInTeams:
+              type: array
+              items:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      username:
+                        type: string
+                        example: "john_doe"
+                      email:
+                        type: string
+                        format: email
+                        example: "john@example.com"
+                      photo:
+                        type: string
+                        format: uri
+                        example: "https://example.com/photos/john.jpg"
+
     UserInTeam:
       type: object
       properties:
         id:
           type: string
-          example: "relation123"
+          format: uuid
+          example: "relation-uuid-123"
           description: Unique identifier for the user-team relationship
         userId:
           type: string
-          example: "user123"
+          format: uuid
+          example: "user-uuid-456"
           description: ID of the user
         teamId:
           type: string
-          example: "team123"
+          format: uuid
+          example: "team-uuid-123"
           description: ID of the team
         role:
           type: string
-          enum: [LEADER, MEMBER]
+          enum: [OWNER, LEADER, MEMBER]
           example: "MEMBER"
           description: Role of the user in the team
         createdAt:
@@ -681,6 +858,7 @@ components:
       properties:
         id:
           type: string
+          format: uuid
           example: "user-uuid-123"
           description: Unique identifier of the user
         username:
@@ -709,9 +887,13 @@ components:
           description: Timestamp when the user joined the team
         relationId:
           type: string
+          format: uuid
           example: "relation-uuid-456"
           description: Unique identifier for the user-team relationship
         isMe:
           type: boolean
           example: true
           description: Indicates if this member is the authenticated user
+
+security:
+  - bearerAuth: []

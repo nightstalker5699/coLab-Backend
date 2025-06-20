@@ -3,10 +3,16 @@ import { catchReqAsync } from "../helpers/catchAsync";
 import appError from "../helpers/appError";
 import { Response, NextFunction } from "express";
 import { ITeam, IUser, IUserInTeam } from "../types/entitiesTypes";
-import { changeRoleSchema, CreateTeamSchema } from "../types/teamTypes";
+import {
+  changeRoleSchema,
+  CreateTeamSchema,
+  default_teamLogo,
+  updateTeamSchema,
+} from "../types/teamTypes";
 import { z } from "zod";
 import { IRequest } from "../types/generalTypes";
 import ValidateInput from "../helpers/ValidateInput";
+import { fileRemover, fileuploader } from "../helpers/image.handle";
 
 const teamObjectFormatter = (team: ITeam, userId: string) => {
   return {
@@ -59,6 +65,51 @@ export const getMyTeams = catchReqAsync(
     });
   }
 );
+export const getTeam = catchReqAsync(
+  async (req: IRequest, res: Response, next: NextFunction) => {
+    const { teamId } = req.params;
+
+    const team = await teamService.getTeam(teamId, {
+      userInTeams: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
+              photo: true,
+            },
+          },
+        },
+      },
+    });
+    const formatted = teamObjectFormatter(team, req.user?.id as string);
+
+    res.status(200).json({
+      message: "success",
+      data: { team: formatted },
+    });
+  }
+);
+
+export const updateMyTeam = catchReqAsync(async (req, res, next) => {
+  const data = ValidateInput(req.body, updateTeamSchema);
+
+  const team = await teamService.updateTeam(data, req.team?.id as string);
+
+  if (req.team?.teamLogo !== team.teamLogo) {
+    await fileuploader(req.file, team.teamLogo as string);
+    if (req.team?.teamLogo !== default_teamLogo)
+      await fileRemover(req.team?.teamLogo as string);
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      team,
+    },
+  });
+});
 
 export const joinTeam = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
@@ -88,33 +139,6 @@ export const changeRole = catchReqAsync(
     res.status(200).json({
       status: "success",
       data: { userRole: userRelation },
-    });
-  }
-);
-
-export const getTeam = catchReqAsync(
-  async (req: IRequest, res: Response, next: NextFunction) => {
-    const { teamId } = req.params;
-
-    const team = await teamService.getTeam(teamId, {
-      userInTeams: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              username: true,
-              email: true,
-              photo: true,
-            },
-          },
-        },
-      },
-    });
-    const formatted = teamObjectFormatter(team, req.user?.id as string);
-
-    res.status(200).json({
-      message: "success",
-      data: { team: formatted },
     });
   }
 );

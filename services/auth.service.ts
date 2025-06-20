@@ -1,5 +1,5 @@
 import { IUser } from "../types/entitiesTypes";
-import { createUserType, loginSchema } from "../types/userTypes";
+import { createUserType, loginSchema, default_photo } from "../types/userTypes";
 import UserService from "./user.service";
 import appError from "../helpers/appError";
 import client from "../middlewares/prisma/user.middleware";
@@ -35,7 +35,7 @@ export default class AuthService {
     userData.password = await bcrypt.hash(userData.password, 12);
     // Create new user
     const user: IUser = await User.create({
-      data: { ...userData, photo: process.env.DEFAULT_PFP as string },
+      data: { ...userData, photo: default_photo },
     });
 
     return user;

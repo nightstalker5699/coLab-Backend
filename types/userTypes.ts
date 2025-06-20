@@ -44,7 +44,7 @@ export const updateUserSchema = z.object({
     .string()
     .min(6, "you must use 6 or more charcters for your new password")
     .optional(),
-  photo: z.string().url().optional(),
+  photo: z.string().optional(),
   updatedPasswordAt: z.date().optional(),
 });
 
@@ -58,3 +58,6 @@ export type partialUser = {
 };
 
 export type UserWithoutPassowrd = Omit<User, "password">;
+
+export const default_photo =
+  "https://pub-ff2ca37b533641ffa6a9cffe678a70d6.r2.dev/images/default.jpeg";
