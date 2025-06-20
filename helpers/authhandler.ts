@@ -27,6 +27,9 @@ passport.deserializeUser(async (id: string, done) => {
   try {
     const user: IUser = (await User.findUnique({
       where: { id },
+      omit: {
+        password: false,
+      },
     })) as IUser;
     done(null, user);
   } catch (error) {

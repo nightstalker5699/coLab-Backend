@@ -14,8 +14,7 @@ const options: swaggerJSDoc.Options = {
         bearerAuth: {
           type: "http",
           scheme: "bearer",
-          description:
-            "Enter Bearer token obtained from Passport authentication",
+          description: "Enter Bearer token obtained from authentication",
         },
         cookieAuth: {
           type: "apiKey",
@@ -36,16 +35,24 @@ const options: swaggerJSDoc.Options = {
           properties: {
             id: {
               type: "string",
-              example: "user123",
+              format: "uuid",
+              example: "123e4567-e89b-12d3-a456-426614174000",
             },
             username: {
               type: "string",
+              pattern: "^[a-zA-Z0-9]",
               example: "john_doe",
             },
             email: {
               type: "string",
               format: "email",
               example: "john@example.com",
+            },
+            photo: {
+              type: "string",
+              format: "uri",
+              nullable: true,
+              example: "https://example.com/images/profile.jpg",
             },
             role: {
               type: "string",
@@ -66,20 +73,24 @@ const options: swaggerJSDoc.Options = {
               format: "date-time",
               example: "2023-10-01T12:00:00Z",
             },
+            updatedPasswordAt: {
+              type: "string",
+              format: "date-time",
+              nullable: true,
+              example: "2023-10-01T12:00:00Z",
+            },
           },
         },
-        LoginCredentials: {
+        ErrorResponse: {
           type: "object",
-          required: ["username", "password"],
           properties: {
-            username: {
+            status: {
               type: "string",
-              example: "john_doe",
+              example: "error",
             },
-            password: {
+            message: {
               type: "string",
-              format: "password",
-              example: "password123",
+              example: "Error message",
             },
           },
         },
@@ -148,7 +159,7 @@ const options: swaggerJSDoc.Options = {
               },
               example: {
                 status: "error",
-                message: "you can't update nothing",
+                message: "you must use characters",
               },
             },
           },

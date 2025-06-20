@@ -11,18 +11,8 @@ import ValidateInput from "../helpers/ValidateInput";
 import { fileuploader } from "../helpers/image.handle";
 export const signup = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
-    req.body.photo = !req.file
-      ? process.env.DEFAULT_PFP
-      : `${process.env.R2_BUCKET_PUBLIC_URL}/images/${Date.now()}-${
-          req.file.originalname
-        }`;
     const userData = ValidateInput(req.body, signupSchema);
-
     const newUser = await AuthService.signup(userData);
-    if (newUser.photo !== process.env.DEFAULT_PFP) {
-      const img = newUser.photo.split("/");
-      await fileuploader(req.file, img.pop() as string, "images");
-    }
     newUser.password = null; // Don't return password in response
     await loginAsync(req, newUser);
     res.status(201).json({

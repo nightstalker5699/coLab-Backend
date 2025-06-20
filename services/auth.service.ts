@@ -6,7 +6,6 @@ import client from "../middlewares/prisma/user.middleware";
 import bcrypt from "bcrypt";
 import { checkEncryption } from "../helpers/checkEncryption";
 import { catchAuthAsync } from "../helpers/catchAsync";
-import { ZodError } from "zod";
 import ValidateInput from "../helpers/ValidateInput";
 
 const User = client.user;
@@ -36,7 +35,7 @@ export default class AuthService {
     userData.password = await bcrypt.hash(userData.password, 12);
     // Create new user
     const user: IUser = await User.create({
-      data: userData,
+      data: { ...userData, photo: process.env.DEFAULT_PFP as string },
     });
 
     return user;
@@ -56,10 +55,10 @@ export default class AuthService {
         },
         omit: { password: false },
       });
-      if (!user) {
+      if (!user || user.password == null) {
         return done(new appError("User not Found", 404, "NotFound"), false);
       }
-      if (!checkEncryption(data.password, user.password as string)) {
+      if (!(await checkEncryption(data.password, user.password as string))) {
         return done(
           new appError("password is incorrect", 401, "ValidationError"),
           false

@@ -9,14 +9,23 @@ import {
 } from "../controllers/userController";
 
 import { Router } from "express";
-import { imageHandle } from "../helpers/image.handle";
+import { imageHandle, imageToBody } from "../helpers/image.handle";
+import { restrictTo } from "../middlewares/protectRoute";
 
 const UserRouter = Router();
 
-UserRouter.route("/me").get(getMe).patch(updateMe).delete(deleteMe);
+UserRouter.route("/me")
+  .get(getMe)
+  .patch(imageHandle.single("photo"), imageToBody, updateMe)
+  .delete(deleteMe);
 UserRouter.route("/mention").get(getUsers);
 UserRouter.route("/:username")
   .get(getUser)
-  .patch(imageHandle.single("profile"), updateUser)
-  .delete(deleteUser);
+  .patch(
+    restrictTo("ADMIN"),
+    imageHandle.single("photo"),
+    imageToBody,
+    updateUser
+  )
+  .delete(restrictTo("ADMIN"), deleteUser);
 export default UserRouter;

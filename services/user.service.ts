@@ -64,7 +64,8 @@ export default class UserService {
         "ValidationError"
       );
     }
-    if (data.newPassword) {
+
+    if (data.newpassword) {
       if (userObj.password && !data.password) {
         throw new appError(
           "you must provide the old password to change it",
@@ -82,9 +83,9 @@ export default class UserService {
           "ValidationError"
         );
       }
-      data.password = bcrypt.hashSync(data.newPassword, 12);
+      data.password = bcrypt.hashSync(data.newpassword, 12);
       data.updatedPasswordAt = new Date(Date.now());
-      delete data.newPassword;
+      delete data.newpassword;
     }
     const updated: IUser = await User.update({
       where: { id: userObj.id },

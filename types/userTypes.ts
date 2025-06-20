@@ -8,7 +8,6 @@ export const signupSchema = z.object({
     .regex(/^[a-zA-Z0-9]/, "please do not use any special characters"),
   email: z.string().email("please insert valid email"),
   password: z.string().min(6, "the password must have 6 or more characters"),
-  photo: z.string(),
 });
 
 export type createUserType = z.infer<typeof signupSchema>;
@@ -45,15 +44,11 @@ export const updateUserSchema = z.object({
     .string()
     .min(6, "you must use 6 or more charcters for your new password")
     .optional(),
+  photo: z.string().url().optional(),
+  updatedPasswordAt: z.date().optional(),
 });
 
-export type updateUserType = {
-  username?: string;
-  email?: string;
-  password?: string;
-  newPassword?: string;
-  updatedPasswordAt?: Date;
-};
+export type updateUserType = z.infer<typeof updateUserSchema>;
 
 export type partialUser = {
   id: string;

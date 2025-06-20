@@ -13,6 +13,7 @@ import ValidateInput from "../helpers/ValidateInput";
 import { fileRemover, fileuploader } from "../helpers/image.handle";
 export const getMe = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
+    (req.user as any).password = null;
     return res.status(200).json({
       status: "sucess",
       data: { user: req.user },
@@ -40,11 +41,24 @@ export const getUser = catchReqAsync(
 
 export const updateMe = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
+    let photo;
+    if (req.body.photo) {
+      photo = await fileuploader(req.file, req.body.photo, "images");
+      req.body.photo = `${process.env.R2_BUCKET_PUBLIC_URL}/${photo.key}`;
+    }
     const data = ValidateInput(req.body, updateUserSchema);
+
     const userObj: IUser = await userService.updateUser(
       req.user as IUser,
       data
     );
+    await photo?.client.send(photo.command);
+    if (
+      req.user?.photo !== process.env.DEFAULT_PFP &&
+      req.user?.photo !== userObj.photo
+    ) {
+      await fileRemover(req.user?.photo.split("/").pop() as string, "images");
+    }
     await loginAsync(req, userObj);
     res.status(200).json({
       status: "success",
@@ -52,34 +66,36 @@ export const updateMe = catchReqAsync(
     });
   }
 );
+
 export const updateUser = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
-    const theUpdate: updateUserType = req.body;
-    if (!theUpdate) {
-      return next(
-        new appError("you can't update nothing", 400, "ValidationError")
-      );
-    }
-    if (req.user?.role !== "ADMIN") {
-      return next(
-        new appError(
-          "You Don't have permission to update users",
-          401,
-          "ForbiddenError"
-        )
-      );
-    }
     if (!req.params.username) {
       return next(
         new appError("you must use characters", 400, "ValidationError")
       );
     }
-    const user: IUser = await userService.getUser({
+    let photo;
+    if (req.body.photo) {
+      photo = await fileuploader(req.file, req.body.photo, "images");
+      req.body.photo = `${process.env.R2_BUCKET_PUBLIC_URL}/${photo.key}`;
+    }
+    const data = ValidateInput(req.body, updateUserSchema);
+
+    const user = await userService.getUser({
       where: { username: req.params.username },
       omit: { password: false },
     });
-    console.log(user);
-    const userObj: IUser = await userService.updateUser(user, theUpdate);
+
+    const userObj: IUser = await userService.updateUser(user, data);
+
+    await photo?.client.send(photo.command);
+
+    if (
+      user.photo !== process.env.DEFAULT_PFP &&
+      user.photo !== userObj.photo
+    ) {
+      await fileRemover(user.photo.split("/").pop() as string, "images");
+    }
 
     res.status(200).json({
       status: "success",
@@ -99,15 +115,6 @@ export const deleteMe = catchReqAsync(
 
 export const deleteUser = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
-    if (req.user?.role !== "ADMIN") {
-      return next(
-        new appError(
-          "You Don't have permission to delete users",
-          401,
-          "ForbiddenError"
-        )
-      );
-    }
     if (!req.params.username) {
       return next(
         new appError("you must use characters", 400, "ValidationError")
@@ -127,13 +134,15 @@ export const deleteUser = catchReqAsync(
 
 export const getUsers = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
-    const username = req.body.username;
+    const username = req.query.username;
     if (!username) {
       return next(
         new appError("you must insert characters", 400, "ValidationError")
       );
     }
-    const users: partialUser[] = await userService.getUsersName(username);
+    const users: partialUser[] = await userService.getUsersName(
+      username as string
+    );
     console.log(users);
     res.json({
       status: "sucess",
@@ -141,24 +150,3 @@ export const getUsers = catchReqAsync(
     });
   }
 );
-export const updatePhoto = catchReqAsync(async (req, res, next) => {
-  if (!req.file) {
-    return next(new appError("you must upload an image", 400));
-  }
-
-  const key = `${process.env.R2_BUCKET_PUBLIC_URL}/images/${Date.now()}-${
-    req.file.originalname
-  }`;
-
-  // service to update image link
-  const updated = await userService.updateImg(req.user?.id as string, key);
-
-  const img = key.split("/");
-  await fileuploader(req.file, img.pop() as string, "images");
-  if (
-    req.user?.photo !==
-    `${process.env.R2_BUCKET_PUBLIC_URL}/images/default.jpeg`
-  ) {
-    await fileRemover(req.user?.photo as string);
-  }
-});

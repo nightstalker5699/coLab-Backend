@@ -24,12 +24,10 @@
                       $ref: "#/components/schemas/User"
       "401":
         $ref: "#/components/responses/UnauthorizedError"
-      "404":
-        $ref: "#/components/responses/NotFoundError"
 
   patch:
     summary: Update current user profile
-    description: Updates the profile information of the currently authenticated user
+    description: Updates the profile information of the currently authenticated user. Supports profile image upload.
     tags:
       - User Management
     security:
@@ -37,25 +35,61 @@
     requestBody:
       required: true
       content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+                pattern: "^[a-zA-Z0-9]"
+                description: "Username (alphanumeric characters only)"
+                example: "new_username"
+              email:
+                type: string
+                format: email
+                example: "newemail@example.com"
+              newpassword:
+                type: string
+                minLength: 6
+                description: "New password (minimum 6 characters)"
+                example: "newpassword123"
+              password:
+                type: string
+                minLength: 6
+                description: "Current password (required when changing password)"
+                example: "oldpassword123"
+              photo:
+                type: string
+                format: binary
+                description: "Profile image file (JPEG, PNG, etc.) - max 5MB"
         application/json:
           schema:
             type: object
             properties:
               username:
                 type: string
+                pattern: "^[a-zA-Z0-9]"
+                description: "Username (alphanumeric characters only)"
                 example: "new_username"
               email:
                 type: string
                 format: email
                 example: "newemail@example.com"
-              newPassword:
+              newpassword:
                 type: string
-                description: New password for the user
+                minLength: 6
+                description: "New password (minimum 6 characters)"
                 example: "newpassword123"
-              oldPassword:
+              password:
                 type: string
-                description: Current password (required when changing password)
+                minLength: 6
+                description: "Current password (required when changing password)"
                 example: "oldpassword123"
+              photo:
+                type: string
+                format: uri
+                description: "Profile image URL"
+                example: "https://example.com/images/profile.jpg"
     responses:
       "200":
         description: User profile updated successfully
@@ -79,7 +113,7 @@
 
   delete:
     summary: Delete current user account
-    description: Soft deletes the currently authenticated user's account
+    description: Soft deletes the currently authenticated user's account (sets isdeleted flag to true)
     tags:
       - User Management
     security:
@@ -90,10 +124,68 @@
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SuccessResponse"
-            example:
-              status: "success"
-              data: null
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: "success"
+                data:
+                  type: "null"
+      "401":
+        $ref: "#/components/responses/UnauthorizedError"
+
+/api/users/mention:
+  get:
+    summary: Search users by username for mentions
+    description: Searches for users by username substring for mention functionality (returns up to 7 users)
+    tags:
+      - User Management
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: username
+        in: query
+        required: true
+        description: "Username search text (case-insensitive substring match)"
+        schema:
+          type: string
+          minLength: 1
+          example: "john"
+    responses:
+      "200":
+        description: Users found successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: "success"
+                data:
+                  type: array
+                  maxItems: 7
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        example: "123e4567-e89b-12d3-a456-426614174000"
+                      username:
+                        type: string
+                        example: "john_doe"
+                      email:
+                        type: string
+                        format: email
+                        example: "john@example.com"
+                      photo:
+                        type: string
+                        format: uri
+                        nullable: true
+                        example: "https://example.com/images/profile.jpg"
+      "400":
+        $ref: "#/components/responses/ValidationError"
       "401":
         $ref: "#/components/responses/UnauthorizedError"
 
@@ -112,6 +204,7 @@
         description: Username of the user to retrieve
         schema:
           type: string
+          pattern: "^[a-zA-Z0-9]"
           example: "john_doe"
     responses:
       "200":
@@ -138,7 +231,7 @@
 
   patch:
     summary: Update user by username (Admin only)
-    description: Updates user information by username. Requires admin privileges and valid JWT token.
+    description: Updates user information by username. Requires admin privileges and valid JWT token. Supports profile image upload.
     tags:
       - User Management
     security:
@@ -150,29 +243,68 @@
         description: Username of the user to update
         schema:
           type: string
+          pattern: "^[a-zA-Z0-9]"
           example: "john_doe"
     requestBody:
       required: true
       content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+                pattern: "^[a-zA-Z0-9]"
+                description: "New username (alphanumeric characters only)"
+                example: "new_username"
+              email:
+                type: string
+                format: email
+                description: "New email address"
+                example: "newemail@example.com"
+              role:
+                type: string
+                enum: ["USER", "ADMIN"]
+                description: "User role"
+                example: "USER"
+              newpassword:
+                type: string
+                minLength: 6
+                description: "New password (minimum 6 characters)"
+                example: "newpassword123"
+              photo:
+                type: string
+                format: binary
+                description: "Profile image file (JPEG, PNG, etc.) - max 5MB"
         application/json:
           schema:
             type: object
             properties:
               username:
                 type: string
+                pattern: "^[a-zA-Z0-9]"
+                description: "New username (alphanumeric characters only)"
                 example: "new_username"
               email:
                 type: string
                 format: email
+                description: "New email address"
                 example: "newemail@example.com"
               role:
                 type: string
                 enum: ["USER", "ADMIN"]
+                description: "User role"
                 example: "USER"
-              newPassword:
+              newpassword:
                 type: string
-                description: New password for the user
+                minLength: 6
+                description: "New password (minimum 6 characters)"
                 example: "newpassword123"
+              photo:
+                type: string
+                format: uri
+                description: "Profile image URL"
+                example: "https://example.com/images/profile.jpg"
     responses:
       "200":
         description: User updated successfully
@@ -200,7 +332,7 @@
 
   delete:
     summary: Delete user by username (Admin only)
-    description: Soft deletes a user by username. Requires admin privileges and valid JWT token.
+    description: Soft deletes a user by username (sets isdeleted flag to true). Requires admin privileges and valid JWT token.
     tags:
       - User Management
     security:
@@ -212,6 +344,7 @@
         description: Username of the user to delete
         schema:
           type: string
+          pattern: "^[a-zA-Z0-9]"
           example: "john_doe"
     responses:
       "204":
@@ -219,10 +352,13 @@
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SuccessResponse"
-            example:
-              status: "success"
-              data: null
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: "success"
+                data:
+                  type: "null"
       "400":
         $ref: "#/components/responses/ValidationError"
       "401":
