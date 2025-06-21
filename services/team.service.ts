@@ -10,7 +10,7 @@ import appError from "../helpers/appError";
 import codeCreator from "../helpers/codeCreater";
 import client from "../middlewares/prisma/user.middleware";
 import { changeRoleInputType, CreateTeamType } from "../types/teamTypes";
-import { updateUserType } from "../types/userTypes";
+import { createUserType, updateUserType } from "../types/userTypes";
 
 export default class TeamService {
   static async checkExist(query: Prisma.TeamCountArgs): Promise<boolean> {
@@ -24,12 +24,14 @@ export default class TeamService {
       "joinCode"
     );
 
-    data.teamData.joinCode = code;
+    data.joinCode = code;
 
-    if (!data.teamData.teamLogo) {
-      data.teamData.teamLogo = default_teamLogo;
+    if (!data.teamLogo) {
+      data.teamLogo = default_teamLogo;
     }
-    const team: ITeam = await client.team.create({ data: data.teamData });
+    const { members, ...insert } = data;
+    console.log(insert);
+    const team: ITeam = await client.team.create({ data: insert });
 
     if (!team) {
       throw new appError("an error creating your team", 400, "DatabaseError");
@@ -71,7 +73,6 @@ export default class TeamService {
           team: true,
         },
       });
-    console.log(relation);
     const teams: ITeam[] = relation.map((row) => {
       return row.team as ITeam;
     });

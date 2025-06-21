@@ -9,7 +9,7 @@ import {
   default_teamLogo,
   updateTeamSchema,
 } from "../types/teamTypes";
-import { z } from "zod";
+import { any, array, z } from "zod";
 import { IRequest } from "../types/generalTypes";
 import ValidateInput from "../helpers/ValidateInput";
 import { fileRemover, fileuploader } from "../helpers/image.handle";
@@ -41,8 +41,10 @@ export const createTeam = catchReqAsync(
     if (team.teamLogo != default_teamLogo) {
       await fileuploader(req.file, team.teamLogo as string);
     }
+
     if (data.members) {
-      const rows: IUserInTeam[] = data.members.map((row) => {
+      const members: String[] = JSON.parse(data.members);
+      const rows: IUserInTeam[] = members.map((row) => {
         return { userId: row, teamId: team.id } as IUserInTeam;
       });
 

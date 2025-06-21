@@ -88,37 +88,58 @@ paths:
       tags:
         - Teams
       summary: Create a new team
-      description: Create a new team with optional members. The authenticated user becomes the team owner.
+      description: Create a new team with optional members and logo. The authenticated user becomes the team owner. Supports both multipart/form-data for file upload and application/json.
       security:
         - bearerAuth: []
       requestBody:
         required: true
         content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/CreateTeamMultipartRequest"
+            examples:
+              basic_team_with_file:
+                summary: Basic team creation with logo file
+                value:
+                  teamName: "Development Team"
+                  theme: "blue"
+                  teamLogo: "(binary file data)"
+                  members: '["2048691a-3c81-4f6f-b806-28c356daae93", "bed92681-fd28-4801-8335-7fdaf45ce386"]'
+              team_without_file:
+                summary: Team creation without logo file
+                value:
+                  teamName: "Marketing Team"
+                  theme: "green"
+                  members: '["e2bea940-71f0-4ff5-9409-309c61ebcc12"]'
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateTeamRequest"
+              $ref: "#/components/schemas/CreateTeamJsonRequest"
             examples:
               basic_team:
                 summary: Basic team creation
                 value:
-                  teamData:
-                    teamName: "Development Team"
-                    teamLogo: "https://example.com/logo.png"
-                    theme: "blue"
+                  teamName: "Development Team"
+                  teamLogo: "https://example.com/logo.png"
+                  theme: "blue"
                   members: []
               team_with_members:
                 summary: Team with initial members
                 value:
-                  teamData:
-                    teamName: "Marketing Team"
-                    teamLogo: "https://example.com/marketing-logo.png"
-                    theme: "green"
+                  teamName: "Marketing Team"
+                  teamLogo: "https://example.com/marketing-logo.png"
+                  theme: "green"
                   members:
                     [
                       "2048691a-3c81-4f6f-b806-28c356daae93",
                       "bed92681-fd28-4801-8335-7fdaf45ce386",
                       "e2bea940-71f0-4ff5-9409-309c61ebcc12",
                     ]
+              minimal_team:
+                summary: Minimal team (only required fields)
+                value:
+                  teamName: "Simple Team"
+                  theme: "default"
+                  members: []
       responses:
         "200":
           description: Team created successfully
@@ -140,9 +161,21 @@ paths:
                     data:
                       id: "team123"
                       teamName: "Development Team"
-                      teamLogo: "https://example.com/logo.png"
+                      teamLogo: "https://pub-ff2ca37b533641ffa6a9cffe678a70d6.r2.dev/teamLogos/team123-logo.jpeg"
                       theme: "blue"
                       joinCode: "ABC123XYZ0"
+                      createdAt: "2024-01-15T10:30:00Z"
+                      updatedAt: "2024-01-15T10:30:00Z"
+                success_with_default_logo:
+                  summary: Team creation with default logo
+                  value:
+                    status: success
+                    data:
+                      id: "team456"
+                      teamName: "Marketing Team"
+                      teamLogo: "https://pub-ff2ca37b533641ffa6a9cffe678a70d6.r2.dev/teamLogos/default.jpeg"
+                      theme: "green"
+                      joinCode: "DEF456ABC1"
                       createdAt: "2024-01-15T10:30:00Z"
                       updatedAt: "2024-01-15T10:30:00Z"
         "400":
@@ -152,11 +185,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
               examples:
-                validation_error:
-                  summary: Validation error
+                validation_error_name:
+                  summary: Team name validation error
                   value:
                     status: error
-                    message: "you must insert a team"
+                    message: "team name can't be more than 25 characters"
+                    errorType: "ValidationError"
+                    statusCode: 400
+                validation_error_theme:
+                  summary: Theme validation error
+                  value:
+                    status: error
+                    message: "theme can't be more than 20 characters"
+                    errorType: "ValidationError"
+                    statusCode: 400
+                validation_error_members:
+                  summary: Members validation error
+                  value:
+                    status: error
+                    message: "the members contain non id"
                     errorType: "ValidationError"
                     statusCode: 400
                 database_error:
@@ -661,31 +708,54 @@ components:
           example: "LEADER"
           description: The new role for the user. Cannot be OWNER.
 
-    CreateTeamRequest:
+    CreateTeamMultipartRequest:
       type: object
       required:
-        - teamData
+        - teamName
+        - theme
+        - members
       properties:
-        teamData:
-          type: object
-          required:
-            - teamName
-          properties:
-            teamName:
-              type: string
-              minLength: 1
-              maxLength: 100
-              example: "Development Team"
-              description: The name of the team
-            teamLogo:
-              type: string
-              format: uri
-              example: "https://example.com/logo.png"
-              description: URL to the team logo image
-            theme:
-              type: string
-              example: "blue"
-              description: Theme color for the team
+        teamName:
+          type: string
+          maxLength: 25
+          example: "Development Team"
+          description: The name of the team (max 25 characters)
+        teamLogo:
+          type: string
+          format: binary
+          description: Team logo image file (optional)
+        theme:
+          type: string
+          maxLength: 20
+          example: "blue"
+          description: Theme color for the team (max 20 characters)
+        members:
+          type: string
+          example: '["2048691a-3c81-4f6f-b806-28c356daae93", "bed92681-fd28-4801-8335-7fdaf45ce386"]'
+          description: JSON string array of user UUIDs to add as initial team members
+
+    CreateTeamJsonRequest:
+      type: object
+      required:
+        - teamName
+        - theme
+        - members
+      properties:
+        teamName:
+          type: string
+          maxLength: 25
+          example: "Development Team"
+          description: The name of the team (max 25 characters)
+        teamLogo:
+          type: string
+          format: uri
+          example: "https://example.com/logo.png"
+          description: URL to the team logo image (optional)
+        theme:
+          type: string
+          maxLength: 20
+          example: "blue"
+          description: Theme color for the team (max 20 characters)
         members:
           type: array
           items:
@@ -696,25 +766,25 @@ components:
               "2048691a-3c81-4f6f-b806-28c356daae93",
               "bed92681-fd28-4801-8335-7fdaf45ce386",
             ]
-          description: Array of user IDs to add as initial team members
+          description: Array of user UUIDs to add as initial team members
 
     UpdateTeamRequest:
       type: object
       properties:
         teamName:
           type: string
-          minLength: 1
-          maxLength: 100
+          maxLength: 25
           example: "Updated Team Name"
-          description: The new name of the team
+          description: The new name of the team (max 25 characters)
         teamLogo:
           type: string
           format: binary
           description: Team logo image file (when using multipart/form-data)
         theme:
           type: string
+          maxLength: 20
           example: "red"
-          description: New theme color for the team
+          description: New theme color for the team (max 20 characters)
 
     Team:
       type: object
@@ -731,7 +801,7 @@ components:
         teamLogo:
           type: string
           format: uri
-          example: "https://example.com/logo.png"
+          example: "https://pub-ff2ca37b533641ffa6a9cffe678a70d6.r2.dev/teamLogos/default.jpeg"
           description: URL to the team logo image
         theme:
           type: string

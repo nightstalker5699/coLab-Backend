@@ -22,13 +22,12 @@ export const fileuploader = async (file: any, key: string) => {
     if (file.mimetype === "image/jpeg" && file.mimetype === "image/png") {
       buffer = await imageSharp(file.buffer);
     }
-    const Key = key.split("/");
+    const Key = key.replace(`${process.env.R2_BUCKET_PUBLIC_URL}/`, "");
 
-    Key.shift();
-
+    console.log(Key);
     const command = new PutObjectCommand({
       Bucket: process.env.R2_BUCKET_NAME,
-      Key: Key.join("/"),
+      Key: Key,
       Body: buffer,
       ContentType: file.mimetype,
     });
