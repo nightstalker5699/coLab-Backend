@@ -3,6 +3,7 @@ import { IUser, ITeam, IUserInTeam } from "../types/entitiesTypes";
 import {
   changeRoleSchema,
   CreateTeamSchema,
+  default_teamLogo,
   updateTeamType,
 } from "../types/teamTypes";
 import appError from "../helpers/appError";
@@ -22,11 +23,18 @@ export default class TeamService {
       "team",
       "joinCode"
     );
+
     data.teamData.joinCode = code;
+
+    if (!data.teamData.teamLogo) {
+      data.teamData.teamLogo = default_teamLogo;
+    }
     const team: ITeam = await client.team.create({ data: data.teamData });
+
     if (!team) {
       throw new appError("an error creating your team", 400, "DatabaseError");
     }
+
     const relation: IUserInTeam = await client.userInTeam.create({
       data: {
         userId: user.id,

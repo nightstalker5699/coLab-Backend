@@ -23,7 +23,9 @@ export const fileuploader = async (file: any, key: string) => {
       buffer = await imageSharp(file.buffer);
     }
     const Key = key.split("/");
+
     Key.shift();
+
     const command = new PutObjectCommand({
       Bucket: process.env.R2_BUCKET_NAME,
       Key: Key.join("/"),

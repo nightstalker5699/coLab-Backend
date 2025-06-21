@@ -38,6 +38,9 @@ export const createTeam = catchReqAsync(
 
     const team = await teamService.createTeam(req.user as IUser, data);
 
+    if (team.teamLogo != default_teamLogo) {
+      await fileuploader(req.file, team.teamLogo as string);
+    }
     if (data.members) {
       const rows: IUserInTeam[] = data.members.map((row) => {
         return { userId: row, teamId: team.id } as IUserInTeam;

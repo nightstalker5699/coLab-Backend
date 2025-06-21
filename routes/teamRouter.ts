@@ -16,7 +16,14 @@ import {
 import { imageHandle, imageToBody } from "../helpers/image.handle";
 const router = express.Router();
 
-router.route("/").get(getMyTeams).post(createTeam);
+router
+  .route("/")
+  .get(getMyTeams)
+  .post(
+    imageHandle.single("teamLogo"),
+    imageToBody("teamLogo", "teamLogos"),
+    createTeam
+  );
 router.post("/joinTeam/:code", joinTeam);
 
 router
