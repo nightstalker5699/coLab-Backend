@@ -9,13 +9,15 @@ import {
   default_teamLogo,
   updateTeamSchema,
 } from "../types/teamTypes";
-import { any, array, z } from "zod";
+import { z } from "zod";
 import { IRequest } from "../types/generalTypes";
-import ValidateInput from "../helpers/ValidateInput";
+import ValidateInput, { validateId } from "../helpers/ValidateInput";
 import { fileRemover, fileuploader } from "../helpers/image.handle";
+import TeamService from "../services/team.service";
 
 const teamObjectFormatter = (team: ITeam, userId: string) => {
   return {
+    id: team.id,
     teamName: team.teamName,
     teamLogo: team.teamLogo,
     theme: team.theme,
@@ -32,70 +34,64 @@ const teamObjectFormatter = (team: ITeam, userId: string) => {
   };
 };
 
-export const createTeam = catchReqAsync(
-  async (req: IRequest, res: Response, next: NextFunction) => {
-    const data = ValidateInput(req.body, CreateTeamSchema);
+export const createTeam = catchReqAsync(async (req, res, next) => {
+  const data = ValidateInput(req.body, CreateTeamSchema);
 
-    const team = await teamService.createTeam(req.user as IUser, data);
+  const team = await teamService.createTeam(req.user as IUser, data);
 
-    if (team.teamLogo != default_teamLogo) {
-      await fileuploader(req.file, team.teamLogo as string);
-    }
-
-    if (data.members) {
-      const members: String[] = JSON.parse(data.members);
-      const rows: IUserInTeam[] = members.map((row) => {
-        return { userId: row, teamId: team.id } as IUserInTeam;
-      });
-
-      await teamService.addMembers(rows);
-    }
-
-    res.status(200).json({
-      status: "success",
-      data: team,
-    });
+  if (team.teamLogo != default_teamLogo) {
+    await fileuploader(req.file, team.teamLogo as string);
   }
-);
 
-export const getMyTeams = catchReqAsync(
-  async (req: IRequest, res: Response, next: NextFunction) => {
-    const teams = await teamService.getMyTeams(req.user?.id as string);
-
-    res.status(200).json({
-      status: "success",
-      data: {
-        teams,
-      },
+  if (data.members) {
+    const members: String[] = JSON.parse(data.members);
+    const rows: IUserInTeam[] = members.map((row) => {
+      return { userId: row, teamId: team.id } as IUserInTeam;
     });
-  }
-);
-export const getTeam = catchReqAsync(
-  async (req: IRequest, res: Response, next: NextFunction) => {
-    const { teamId } = req.params;
 
-    const team = await teamService.getTeam(teamId, {
-      userInTeams: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              username: true,
-              email: true,
-              photo: true,
-            },
+    await teamService.addMembers(rows);
+  }
+
+  res.status(201).json({
+    status: "success",
+    data: team,
+  });
+});
+
+export const getMyTeams = catchReqAsync(async (req, res, next) => {
+  const teams = await teamService.getMyTeams(req.user?.id as string);
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      teams,
+    },
+  });
+});
+export const getTeam = catchReqAsync(async (req, res, next) => {
+  const { teamId } = req.params;
+
+  const team = await teamService.getTeam(teamId, {
+    userInTeams: {
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            photo: true,
           },
         },
       },
-    });
-    const formatted = teamObjectFormatter(team, req.user?.id as string);
+    },
+  });
+  const formatted = teamObjectFormatter(team, req.user?.id as string);
 
-    res.status(200).json({
-      message: "success",
-      data: { team: formatted },
-    });
-  }
-);
+  res.status(200).json({
+    message: "success",
+    data: { team: formatted },
+  });
+});
 
 export const updateMyTeam = catchReqAsync(async (req, res, next) => {
   const data = ValidateInput(req.body, updateTeamSchema);
@@ -116,55 +112,88 @@ export const updateMyTeam = catchReqAsync(async (req, res, next) => {
   });
 });
 
-export const joinTeam = catchReqAsync(
-  async (req: IRequest, res: Response, next: NextFunction) => {
-    const { code } = req.params;
-    if (z.string().min(10).max(10).safeParse(code).success === false) {
-      return next(new appError("code must be a valid string", 400));
-    }
-
-    const updatedTeam = await teamService.joinTeam(req.user as IUser, code);
-
-    res.status(200).json({
-      status: "success",
-      data: { team: updatedTeam },
-    });
+export const joinTeam = catchReqAsync(async (req, res, next) => {
+  const { code } = req.params;
+  if (z.string().min(10).max(10).safeParse(code).success === false) {
+    return next(new appError("code must be a valid string", 400));
   }
-);
 
-export const changeRole = catchReqAsync(
-  async (req: IRequest, res: Response, next: NextFunction) => {
-    req.body.relationId = req.params.relationId;
-    const data = ValidateInput(req.body, changeRoleSchema);
+  const updatedTeam = await teamService.joinTeam(req.user as IUser, code);
 
-    if (req.userInTeam?.id === data.relationId) {
-      return next(new appError("you can't change your role", 400));
-    }
-    const userRelation = await teamService.changeRole(data);
-    res.status(200).json({
-      status: "success",
-      data: { userRole: userRelation },
-    });
+  res.status(201).json({
+    status: "success",
+    data: { team: updatedTeam },
+  });
+});
+
+export const changeRole = catchReqAsync(async (req, res, next) => {
+  req.body.relationId = req.params.relationId;
+  const data = ValidateInput(req.body, changeRoleSchema);
+
+  if (req.userInTeam?.id === data.relationId) {
+    return next(new appError("you can't change your role", 400));
   }
-);
+  const userRelation = await teamService.changeRole(data);
+  res.status(200).json({
+    status: "success",
+    data: { userRole: userRelation },
+  });
+});
 
-export const kickUserFromTeam = catchReqAsync(
-  async (req: IRequest, res: Response, next: NextFunction) => {
-    const { relationId } = req.params;
+export const kickUserFromTeam = catchReqAsync(async (req, res, next) => {
+  const { relationId } = req.params;
 
-    if (z.string().uuid().safeParse(relationId).success === false) {
-      return next(new appError("relationId must be a valid uuid", 400));
-    }
-
-    if (req.userInTeam?.id === relationId) {
-      return next(new appError("you can't kick yourself", 400));
-    }
-
-    const userRelation = await teamService.kickUserFromTeam(relationId);
-
-    res.status(200).json({
-      status: "success",
-      data: { userRole: userRelation },
-    });
+  if (z.string().uuid().safeParse(relationId).success === false) {
+    return next(new appError("relationId must be a valid uuid", 400));
   }
-);
+
+  if (req.userInTeam?.id === relationId) {
+    return next(new appError("you can't kick yourself", 400));
+  }
+
+  const userRelation = await teamService.kickUserFromTeam(relationId);
+
+  res.status(200).json({
+    status: "success",
+    data: { userRole: userRelation },
+  });
+});
+
+export const leaveTeam = catchReqAsync(async (req, res, next) => {
+  if (req.userInTeam?.role == "OWNER") {
+    return next(
+      new appError("you can't leave without transfering the ownership", 400)
+    );
+  }
+  await teamService.kickUserFromTeam(req.userInTeam?.id as string);
+
+  res.status(200).json({
+    status: "success",
+    message: "done",
+  });
+});
+
+export const transferOwnership = catchReqAsync(async (req, res, next) => {
+  const { relationId } = req.body;
+
+  if (!relationId || !(await validateId.safeParseAsync(relationId)).success) {
+    return next(new appError("invalid user Id", 400));
+  }
+
+  await TeamService.transferOwnership(req.user as any, relationId);
+
+  res.status(200).json({
+    status: "success",
+    message: " the owner have been transfer",
+  });
+});
+
+export const deleteTeam = catchReqAsync(async (req, res, next) => {
+  await teamService.deleteTeam(req.team?.id as string);
+
+  await fileRemover(req.team?.teamLogo as string);
+
+  res.status(204).json({
+    status: "success",
+  });
+});

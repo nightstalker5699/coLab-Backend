@@ -329,7 +329,169 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /api/teams/{teamId}/leave:
+    delete:
+      summary: Leave a team
+      description: Allows a team member to leave the team. Team owners cannot leave without first transferring ownership to another member.
+      tags:
+        - Teams
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          description: Unique identifier of the team to leave
+          schema:
+            type: string
+            format: uuid
+            example: "team-uuid-123"
+      responses:
+        "200":
+          description: Successfully left the team
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: done
+              examples:
+                success_response:
+                  summary: Successful team leave
+                  value:
+                    status: success
+                    message: done
+        "400":
+          description: Bad request - Owner cannot leave without transferring ownership
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                owner_cannot_leave:
+                  summary: Owner trying to leave
+                  value:
+                    status: error
+                    message: "you can't leave without transfering the ownership"
+                    statusCode: 400
+        "401":
+          description: Unauthorized - User does not belong to this team
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Team not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
+  /api/teams/{teamId}/transferownership:
+    patch:
+      summary: Transfer team ownership
+      description: Transfer ownership of the team to another team member. Only the current team owner can perform this action. The current owner will become a regular member.
+      tags:
+        - Teams
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          description: Unique identifier of the team
+          schema:
+            type: string
+            format: uuid
+            example: "team-uuid-123"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransferOwnershipRequest"
+            examples:
+              transfer_ownership:
+                summary: Transfer ownership to another member
+                value:
+                  relationId: "relation-uuid-789"
+      responses:
+        "200":
+          description: Ownership transferred successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: " the owner have been transfer"
+              examples:
+                success_response:
+                  summary: Successful ownership transfer
+                  value:
+                    status: success
+                    message: " the owner have been transfer"
+        "400":
+          description: Bad request - Invalid relation ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                invalid_relation_id:
+                  summary: Invalid relation ID
+                  value:
+                    status: error
+                    message: "invalid user Id"
+                    statusCode: 400
+        "401":
+          description: Unauthorized - Only team owners can transfer ownership
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: User-team relationship not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                user_not_found:
+                  summary: User doesn't belong to team
+                  value:
+                    status: error
+                    message: "this user doesn't belong to this team"
+                    statusCode: 404
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                database_error:
+                  summary: Database error during transfer
+                  value:
+                    status: error
+                    message: "an error occurred while trying to kick the user"
+                    errorType: "DatabaseError"
+                    statusCode: 500
   /api/teams/{teamId}:
     get:
       tags:
@@ -489,6 +651,64 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+    delete:
+      summary: Delete team
+      description: Delete the entire team and all its associated data. Only team owners can perform this action. This action is irreversible.
+      tags:
+        - Teams
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          description: Unique identifier of the team to delete
+          schema:
+            type: string
+            format: uuid
+            example: "team-uuid-123"
+      responses:
+        "204":
+          description: Team deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+              examples:
+                success_response:
+                  summary: Successful team deletion
+                  value:
+                    status: success
+        "401":
+          description: Unauthorized - Only team owners can delete teams
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Team not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                database_error:
+                  summary: Database error during deletion
+                  value:
+                    status: error
+                    message: "an error occurred while trying to kick the user"
+                    errorType: "DatabaseError"
+                    statusCode: 500
 
   /api/teams/{teamId}/members/{relationId}:
     patch:
@@ -964,6 +1184,16 @@ components:
           type: boolean
           example: true
           description: Indicates if this member is the authenticated user
+    TransferOwnershipRequest:
+      type: object
+      required:
+        - relationId
+      properties:
+        relationId:
+          type: string
+          format: uuid
+          example: "relation-uuid-789"
+          description: The unique identifier of the user-team relationship for the user who will become the new owner
 
 security:
   - bearerAuth: []

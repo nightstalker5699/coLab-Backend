@@ -43,9 +43,8 @@ model Team {
   createdAt DateTime   @default(now())
   theme     String?   @db.VarChar(20)
   joinCode String?     @unique @db.VarChar(12)
-  teamIsActive Boolean  @default(true)
   userInTeams UserInTeam[]
-  events    Event[]
+  taskCategories    TaskCategory[]
 
   @@map("teams")
 }
@@ -68,17 +67,15 @@ model UserInTeam {
   @@map("user_in_teams")
 }
 
-model Event {
+model TaskCategory {
   id      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  eventName String @db.VarChar(50)
-  eventDescription String @db.VarChar(255)
-  eventDeadline DateTime 
-  eventStatus Status @default(ASSIGNED)
+  categoryName String @db.VarChar(50)
+  categoryColor String? @db.VarChar(20)
   createdAt DateTime @default(now())
   teamId    String @db.Uuid 
   team      Team     @relation(fields: [teamId], references: [id],onDelete: Cascade)
   tasks    Task[]
-  @@map("events")
+  @@map("task_categories")
   @@index([teamId], name: "event_team_index")
 }
 
@@ -91,11 +88,11 @@ model Task {
   taskStatus Status @default(ASSIGNED)
   taskPriority Priority @default(MEDIUM)
   createdAt DateTime @default(now())
-  eventId  String @db.Uuid
-  event    Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  taskCategoryId  String @db.Uuid
+  event    TaskCategory    @relation(fields: [taskCategoryId], references: [id])
   userTasks UserTask[]
   comments Comment[]
-  @@index([eventId], name: "task_event_index")
+  @@index([taskCategoryId], name: "task_event_index")
 
   @@map("tasks")
 }

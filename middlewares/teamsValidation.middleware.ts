@@ -6,18 +6,26 @@ import TeamService from "../services/team.service";
 import { ITeam } from "../types/entitiesTypes";
 import { validateId } from "../helpers/ValidateInput";
 import { ZodError } from "zod";
+import { Role } from "@prisma/client";
 
-export const checkTeamId = catchReqAsync(
-  async (req: IRequest, res: Response, next: NextFunction) => {
-    const { teamId } = req.params;
-    if (!teamId || (await validateId.safeParseAsync(teamId)).success == false) {
-      return next(new appError("invalid team id", 400));
+export const checkId = (paramName: string, model: any, modelName: string) =>
+  catchReqAsync(async (req: IRequest, res: Response, next: NextFunction) => {
+    const id = req.params[paramName];
+    if (!id || !(await validateId.safeParseAsync(id)).success) {
+      console.log(id);
+      return next(new appError("invalid id", 400));
     }
-    const team = await TeamService.getTeam(teamId, {});
-    req.team = team;
+    const object = await model.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (!object) {
+      return next(new appError(`there is no ${modelName} found`, 404));
+    }
+    (req as any)[modelName] = object;
     next();
-  }
-);
+  });
 
 export const doesHeBelong = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
@@ -34,16 +42,12 @@ export const doesHeBelong = catchReqAsync(
   }
 );
 
-export const requireOwner = catchReqAsync(
-  async (req: IRequest, res: Response, next: NextFunction) => {
-    if (req.userInTeam?.role !== "OWNER") {
+export const requirePermission = (...teamRoles: Role[]) =>
+  catchReqAsync(async (req: IRequest, res: Response, next: NextFunction) => {
+    if (!req.userInTeam?.role || !teamRoles.includes(req.userInTeam.role)) {
       return next(
-        new appError(
-          "you can't use this action without the owner permissions",
-          401
-        )
+        new appError("you can't use this action without permissions", 401)
       );
     }
     next();
-  }
-);
+  });

@@ -24,7 +24,6 @@ export const fileuploader = async (file: any, key: string) => {
     }
     const Key = key.replace(`${process.env.R2_BUCKET_PUBLIC_URL}/`, "");
 
-    console.log(Key);
     const command = new PutObjectCommand({
       Bucket: process.env.R2_BUCKET_NAME,
       Key: Key,
@@ -42,11 +41,11 @@ export const fileuploader = async (file: any, key: string) => {
 
 export const fileRemover = async (fileUrl: string) => {
   try {
-    const url = fileUrl.split("/");
-    url.shift();
+    const Key = fileUrl.replace(`${process.env.R2_BUCKET_PUBLIC_URL}/`, "");
+
     const command = new DeleteObjectCommand({
       Bucket: process.env.R2_BUCKET_NAME,
-      Key: url.join("/"),
+      Key: Key,
     });
     const response = await r2Client.send(command);
 

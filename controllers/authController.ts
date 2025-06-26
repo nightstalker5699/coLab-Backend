@@ -8,21 +8,19 @@ import { Strategy as googleStrategy } from "passport-google-oauth20";
 import { Strategy as localStrategy } from "passport-local";
 import { IRequest } from "../types/generalTypes";
 import ValidateInput from "../helpers/ValidateInput";
-import { fileuploader } from "../helpers/image.handle";
-export const signup = catchReqAsync(
-  async (req: IRequest, res: Response, next: NextFunction) => {
-    const userData = ValidateInput(req.body, signupSchema);
-    const newUser = await AuthService.signup(userData);
-    newUser.password = null; // Don't return password in response
-    await loginAsync(req, newUser);
-    res.status(201).json({
-      status: "success",
-      data: {
-        user: newUser,
-      },
-    });
-  }
-);
+
+export const signup = catchReqAsync(async (req, res, next) => {
+  const userData = ValidateInput(req.body, signupSchema);
+  const newUser = await AuthService.signup(userData);
+  newUser.password = null; // Don't return password in response
+  await loginAsync(req, newUser);
+  res.status(201).json({
+    status: "success",
+    data: {
+      user: newUser,
+    },
+  });
+});
 
 export const githubSignin = new githubStrategy(
   {
@@ -53,16 +51,14 @@ export const localSignin = new localStrategy(
   AuthService.localLogin
 );
 
-export const logout = catchReqAsync(
-  async (req: IRequest, res: Response, next: NextFunction) => {
-    req.logout((err) => {
-      if (err) {
-        return next(new appError("Logout failed", 500, "ServerError"));
-      }
-      res.status(200).json({
-        status: "success",
-        message: "Logged out successfully",
-      });
+export const logout = catchReqAsync(async (req, res, next) => {
+  req.logout((err) => {
+    if (err) {
+      return next(new appError("Logout failed", 500, "ServerError"));
+    }
+    res.status(200).json({
+      status: "success",
+      message: "Logged out successfully",
     });
-  }
-);
+  });
+});

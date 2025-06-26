@@ -66,6 +66,7 @@ export default class UserService {
     }
 
     if (data.newpassword) {
+      console.log(userObj);
       if (userObj.password && !data.password) {
         throw new appError(
           "you must provide the old password to change it",
