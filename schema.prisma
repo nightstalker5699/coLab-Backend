@@ -6,137 +6,171 @@ datasource db {
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["fullTextSearchPostgres"]
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
 }
+
+// ================================
+// USER MODELS
+// ================================
+
 model User {
-  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  username      String @unique @db.VarChar(50)
-  email     String   @unique @db.VarChar(50)
-  password  String?   @db.VarChar(255)
-  googleId String? @unique @db.VarChar(255)
-  githubId String? @unique @db.VarChar(255)
-  createdAt DateTime @default(now())
+  id                String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  username          String       @unique @db.VarChar(50)
+  email             String       @unique @db.VarChar(50)
+  password          String?      @db.VarChar(255)
+  googleId          String?      @unique @db.VarChar(255)
+  githubId          String?      @unique @db.VarChar(255)
+  createdAt         DateTime     @default(now())
   updatedPasswordAt DateTime?
-  photo    String @db.VarChar(100)
-  isdeleted Boolean  @default(false)
-  role      SystemRole @default(SYSTEMUSER)
-  resetToken ResetCode[]
-  userInTeams UserInTeam[]
+  photo             String       @db.VarChar(100)
+  isdeleted         Boolean      @default(false)
+  role              SystemRole   @default(SYSTEMUSER)
+  
+  // Relations
+  resetToken        ResetCode[]
+  userInTeams       UserInTeam[]
 
   @@map("users")
 }
 
 model ResetCode {
-  id       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId    String    @db.Uuid
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @db.Uuid
   code      String   @db.VarChar(8)
   expiresAt DateTime
+  
+  // Relations
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
   @@index([userId], name: "reset_code_user_index")
   @@map("reset_codes")
 }
 
+// ================================
+// TEAM MODELS
+// ================================
+
 model Team {
-  id       String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  teamName  String @db.VarChar(25)
-  teamLogo String? @db.VarChar(100)
-  createdAt DateTime   @default(now())
-  theme     String?   @db.VarChar(20)
-  joinCode String?     @unique @db.VarChar(12)
-  userInTeams UserInTeam[]
-  taskCategories    TaskCategory[]
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teamName       String         @db.VarChar(25)
+  teamLogo       String?        @db.VarChar(100)
+  createdAt      DateTime       @default(now())
+  theme          String?        @db.VarChar(20)
+  joinCode       String?        @unique @db.VarChar(12)
+  
+  // Relations
+  userInTeams    UserInTeam[]
+  taskCategories TaskCategory[]
+  tasks          Task[]
 
   @@map("teams")
 }
 
-
 model UserInTeam {
-  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId    String @db.Uuid 
-  teamId    String @db.Uuid
-  role      Role   @default(MEMBER)
+  id       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId   String   @db.Uuid
+  teamId   String   @db.Uuid
+  role     Role     @default(MEMBER)
   joinedAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id],onDelete: Cascade)
-  team      Team     @relation(fields: [teamId], references: [id] , onDelete: Cascade)
-  taskAssigned UserTask[]
-  comments Comment[]
+  
+  // Relations
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team             Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  taskAssignedTo     Task[]      @relation("TaskAssignedTo")
+  taskAssignedBy     Task[]      @relation("TaskAssignedBy")
+  comments         Comment[]
 
-  @@unique([userId,teamId])
+  @@unique([userId, teamId])
   @@index([userId])
   @@index([teamId])
   @@map("user_in_teams")
 }
 
+// ================================
+// TASK MODELS
+// ================================
+
 model TaskCategory {
-  id      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  categoryName String @db.VarChar(50)
-  categoryColor String? @db.VarChar(20)
-  createdAt DateTime @default(now())
-  teamId    String @db.Uuid 
-  team      Team     @relation(fields: [teamId], references: [id],onDelete: Cascade)
-  tasks    Task[]
-  @@map("task_categories")
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  categoryName  String   @db.VarChar(50)
+  categoryColor String?  @db.VarChar(20)
+  createdAt     DateTime @default(now())
+  teamId        String   @db.Uuid
+  
+  // Relations
+  team          Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  tasks         Task[]
+
   @@index([teamId], name: "event_team_index")
+  @@map("task_categories")
 }
 
 model Task {
-  id      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  taskName String  @db.VarChar(50)
-  taskDescription String @db.VarChar(255)
-  taskDeadline DateTime
-  attachedFile String? @db.VarChar(60)
-  taskStatus Status @default(ASSIGNED)
-  taskPriority Priority @default(MEDIUM)
-  createdAt DateTime @default(now())
-  taskCategoryId  String @db.Uuid
-  event    TaskCategory    @relation(fields: [taskCategoryId], references: [id])
-  userTasks UserTask[]
-  comments Comment[]
-  @@index([taskCategoryId], name: "task_event_index")
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  taskName        String   @db.VarChar(50)
+  taskDescription String   @db.VarChar(255)
+  taskDeadline    DateTime
+  attachedFile    String?  @db.VarChar(60)
+  taskStatus      Status   @default(ASSIGNED)
+  taskPriority    Priority @default(MEDIUM)
+  createdAt       DateTime @default(now())
+  
+  // Foreign Keys
+  taskCategoryId  String   @db.Uuid
+  assignedById    String   @db.Uuid
+  assignedToId    String   @db.Uuid
+  teamId          String   @db.Uuid
+  
+  // Relations
+  taskCategory    TaskCategory @relation(fields: [taskCategoryId], references: [id])
+  assignedBy      UserInTeam   @relation("TaskAssignedBy", fields: [assignedById], references: [id])
+  assignedTo      UserInTeam   @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
+  team            Team         @relation(fields: [teamId], references: [id])
+  comments        Comment[]
 
+  @@index([taskCategoryId], name: "task_event_index")
   @@map("tasks")
 }
 
-model UserTask {
-  id      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  memberId    String @db.Uuid
-  taskId    String @db.Uuid
-  assignedAt DateTime @default(now())
-  userInTeam      UserInTeam     @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  @@unique([memberId, taskId])
-  @@index([memberId], name: "user_task_member_index")
-  @@map("user_tasks")
-}
 
 model Comment {
-  id      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  content String @db.VarChar(255)
-  createdAt DateTime @default(now())
-  attachedFile String? @db.VarChar(60)
-  userId    String @db.Uuid
-  taskId    String @db.Uuid
-  user      UserInTeam     @relation(fields: [userId], references: [id],onDelete: Cascade)
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  content      String   @db.VarChar(255)
+  createdAt    DateTime @default(now())
+  attachedFile String?  @db.VarChar(60)
+  userId       String   @db.Uuid
+  taskId       String   @db.Uuid
+  
+  // Relations
+  user         UserInTeam @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task         Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
   @@map("comments")
 }
+
+// ================================
+// ENUMS
+// ================================
 
 enum Role {
   LEADER
   MEMBER
   OWNER
 }
+
 enum SystemRole {
   SYSTEMUSER
   ADMIN
 }
+
 enum Status {
-  ASSIGNED
+  ISSUED
   IN_PROGRESS
-  REJECTED
-  APPROVED
-  COMPLETED
+  IN_REVIEW
+  DONE
+  ASSIGNED
 }
+
 enum Priority {
   LOW
   MEDIUM

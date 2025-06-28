@@ -5,6 +5,7 @@ import {
   updateCategoryType,
 } from "../types/taskCategoryTypes";
 import { Prisma } from "@prisma/client";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 const taskClient = client.taskCategory;
 
 export class taskCategoryService {
@@ -31,6 +32,27 @@ export class taskCategoryService {
     });
   }
   static async updateTaskCategory(data: updateCategoryType, id: string) {
-    return await taskClient.update({ where: { id }, data });
+    try {
+      const taskCategory = await taskClient.update({ where: { id }, data });
+
+      return taskCategory;
+    } catch (err) {
+      if (err instanceof PrismaClientKnownRequestError)
+        if (err.code === "P2025") {
+          console.log("there is no taskCategory with that ID");
+        }
+    }
+  }
+  static async deleteTaskCategory(id: string) {
+    try {
+      const taskCategory = await taskClient.delete({ where: { id } });
+
+      return taskCategory;
+    } catch (err) {
+      if (err instanceof PrismaClientKnownRequestError)
+        if (err.code === "P2025") {
+          console.log("there is no taskCategory with that ID");
+        }
+    }
   }
 }

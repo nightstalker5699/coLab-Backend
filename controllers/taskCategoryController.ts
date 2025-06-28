@@ -1,4 +1,4 @@
-import ValidateInput from "../helpers/ValidateInput";
+import ValidateInput, { validateId } from "../helpers/ValidateInput";
 import { catchReqAsync } from "../helpers/catchAsync";
 import appError from "../helpers/appError";
 import {
@@ -45,16 +45,39 @@ export const getAllTaskCategory = catchReqAsync(async (req, res, next) => {
 });
 
 export const updateTaskCategory = catchReqAsync(async (req, res, next) => {
-  req.body.teamId = req.team?.id;
-
+  const taskCategoryId = req.params.taskCategoryId;
+  if (
+    !taskCategoryId ||
+    !(await validateId.safeParseAsync(taskCategoryId)).success
+  ) {
+    return next(new appError("invalid taskCategory id", 400));
+  }
   const data = ValidateInput(req.body, updateTaskCategorySchema);
 
   const TaskCategory = await taskCategoryService.updateTaskCategory(
     data,
-    req.taskCategory?.id as string
+    taskCategoryId
   );
 
   res.status(200).json({
+    status: "success",
+    data: { TaskCategory },
+  });
+});
+export const deleteTaskCategory = catchReqAsync(async (req, res, next) => {
+  const taskCategoryId = req.params.taskCategoryId;
+  if (
+    !taskCategoryId ||
+    !(await validateId.safeParseAsync(taskCategoryId)).success
+  ) {
+    return next(new appError("invalid taskCategory id", 400));
+  }
+
+  const TaskCategory = await taskCategoryService.deleteTaskCategory(
+    taskCategoryId
+  );
+
+  res.status(204).json({
     status: "success",
     data: { TaskCategory },
   });

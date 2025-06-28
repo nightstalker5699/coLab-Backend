@@ -1,0 +1,394 @@
+openapi: 3.0.3
+info:
+  title: Task Category API
+  description: API for managing task categories within teams
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+paths:
+  /api/teams/{teamId}/taskCategories:
+    get:
+      summary: Get all task categories for a team
+      description: Retrieve all task categories that belong to a specific team with optional filtering by category name
+      tags:
+        - Task Categories
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          description: The unique identifier of the team
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        - name: categoryName
+          in: query
+          required: false
+          description: Filter task categories by name (case insensitive partial match)
+          schema:
+            type: string
+            maxLength: 50
+          example: "Development"
+      responses:
+        "200":
+          description: Successfully retrieved task categories
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  data:
+                    type: object
+                    properties:
+                      taskCategory:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/TaskCategoryResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      security:
+        - bearerAuth: []
+
+    post:
+      summary: Create a new task category
+      description: Create a new task category for a team (requires LEADER or OWNER permissions)
+      tags:
+        - Task Categories
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          description: The unique identifier of the team
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTaskCategoryRequest"
+      responses:
+        "201":
+          description: Task category created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  data:
+                    type: object
+                    properties:
+                      TaskCategory:
+                        $ref: "#/components/schemas/TaskCategory"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      security:
+        - bearerAuth: []
+
+  /api/teams/{teamId}/taskCategories/{taskCategoryId}:
+    patch:
+      summary: Update a task category
+      description: Update an existing task category (requires LEADER or OWNER permissions)
+      tags:
+        - Task Categories
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          description: The unique identifier of the team
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        - name: taskCategoryId
+          in: path
+          required: true
+          description: The unique identifier of the task category
+          schema:
+            type: string
+            format: uuid
+          example: "660e8400-e29b-41d4-a716-446655440111"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTaskCategoryRequest"
+      responses:
+        "200":
+          description: Task category updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  data:
+                    type: object
+                    properties:
+                      TaskCategory:
+                        $ref: "#/components/schemas/TaskCategory"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      security:
+        - bearerAuth: []
+
+    delete:
+      summary: Delete a task category
+      description: Delete an existing task category (requires LEADER or OWNER permissions)
+      tags:
+        - Task Categories
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          description: The unique identifier of the team
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        - name: taskCategoryId
+          in: path
+          required: true
+          description: The unique identifier of the task category
+          schema:
+            type: string
+            format: uuid
+          example: "660e8400-e29b-41d4-a716-446655440111"
+      responses:
+        "204":
+          description: Task category deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  data:
+                    type: object
+                    properties:
+                      TaskCategory:
+                        $ref: "#/components/schemas/TaskCategory"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      security:
+        - bearerAuth: []
+
+components:
+  schemas:
+    TaskCategory:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the task category
+          example: "660e8400-e29b-41d4-a716-446655440111"
+        categoryName:
+          type: string
+          maxLength: 50
+          description: Name of the task category
+          example: "Development"
+        categoryColor:
+          type: string
+          maxLength: 20
+          description: Color associated with the task category
+          example: "#3B82F6"
+        teamId:
+          type: string
+          format: uuid
+          description: ID of the team this category belongs to
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      required:
+        - id
+        - categoryName
+        - categoryColor
+        - teamId
+
+    TaskCategoryResponse:
+      type: object
+      description: Simplified task category response (used in GET all endpoint)
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the task category
+          example: "660e8400-e29b-41d4-a716-446655440111"
+        categoryName:
+          type: string
+          maxLength: 50
+          description: Name of the task category
+          example: "Development"
+        categoryColor:
+          type: string
+          maxLength: 20
+          description: Color associated with the task category
+          example: "#3B82F6"
+      required:
+        - id
+        - categoryName
+        - categoryColor
+
+    CreateTaskCategoryRequest:
+      type: object
+      properties:
+        categoryName:
+          type: string
+          maxLength: 50
+          description: Name of the task category
+          example: "Development"
+        categoryColor:
+          type: string
+          maxLength: 20
+          description: Color associated with the task category (hex color code recommended)
+          example: "#3B82F6"
+      required:
+        - categoryName
+        - categoryColor
+
+    UpdateTaskCategoryRequest:
+      type: object
+      properties:
+        categoryName:
+          type: string
+          maxLength: 50
+          description: Name of the task category
+          example: "Updated Development"
+        categoryColor:
+          type: string
+          maxLength: 20
+          description: Color associated with the task category (hex color code recommended)
+          example: "#EF4444"
+      description: All fields are optional for updates
+
+    Error:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "error"
+        message:
+          type: string
+          description: Error message describing what went wrong
+          example: "Invalid task category ID"
+        code:
+          type: integer
+          description: HTTP status code
+          example: 400
+      required:
+        - status
+        - message
+
+  responses:
+    BadRequest:
+      description: Bad request - Invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: "error"
+            message: "you can't use names with more than 50 characters"
+            code: 400
+
+    Unauthorized:
+      description: Unauthorized - Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: "error"
+            message: "Authentication required"
+            code: 401
+
+    Forbidden:
+      description: Forbidden - Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: "error"
+            message: "You don't have permission to perform this action"
+            code: 403
+
+    NotFound:
+      description: Not found - Resource doesn't exist
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: "error"
+            message: "Task category not found"
+            code: 404
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: "error"
+            message: "there is an error creating your Task Category"
+            code: 500
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Task Categories
+    description: Operations related to task category management

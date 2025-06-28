@@ -6,6 +6,7 @@ import {
 } from "../middlewares/teamsValidation.middleware";
 import {
   createTaskCategory,
+  getAllTaskCategory,
   updateTaskCategory,
 } from "../controllers/taskCategoryController";
 import client from "../middlewares/prisma/user.middleware";
@@ -15,6 +16,7 @@ const router = express.Router({
 
 router
   .route("/")
+  .get(checkId("teamId", client.team, "team"), doesHeBelong, getAllTaskCategory)
   .post(
     checkId("teamId", client.team, "team"),
     doesHeBelong,
@@ -28,7 +30,12 @@ router
     checkId("teamId", client.team, "team"),
     doesHeBelong,
     requirePermission("LEADER", "OWNER"),
-    checkId("taskCategoryId", client.taskCategory, "taskCategory"),
+    updateTaskCategory
+  )
+  .delete(
+    checkId("teamId", client.team, "team"),
+    doesHeBelong,
+    requirePermission("LEADER", "OWNER"),
     updateTaskCategory
   );
 export default router;
