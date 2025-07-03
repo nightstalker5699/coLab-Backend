@@ -10,15 +10,11 @@ const taskClient = client.taskCategory;
 
 export class taskCategoryService {
   static async createTaskCategory(data: createCategoryType) {
-    try {
-      const taskCategory = await taskClient.create({
-        data,
-      });
+    const taskCategory = await taskClient.create({
+      data,
+    });
 
-      return taskCategory;
-    } catch (err) {
-      throw new appError("there is an error creating your Task Category", 400);
-    }
+    return taskCategory;
   }
 
   static async getAllTaskCategory(args: Prisma.TaskCategoryFindManyArgs) {
@@ -32,27 +28,13 @@ export class taskCategoryService {
     });
   }
   static async updateTaskCategory(data: updateCategoryType, id: string) {
-    try {
-      const taskCategory = await taskClient.update({ where: { id }, data });
+    const taskCategory = await taskClient.update({ where: { id }, data });
 
-      return taskCategory;
-    } catch (err) {
-      if (err instanceof PrismaClientKnownRequestError)
-        if (err.code === "P2025") {
-          console.log("there is no taskCategory with that ID");
-        }
-    }
+    return taskCategory;
   }
   static async deleteTaskCategory(id: string) {
-    try {
-      const taskCategory = await taskClient.delete({ where: { id } });
+    const taskCategory = await taskClient.delete({ where: { id } });
 
-      return taskCategory;
-    } catch (err) {
-      if (err instanceof PrismaClientKnownRequestError)
-        if (err.code === "P2025") {
-          console.log("there is no taskCategory with that ID");
-        }
-    }
+    return taskCategory;
   }
 }

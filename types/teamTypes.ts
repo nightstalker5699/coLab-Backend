@@ -45,5 +45,4 @@ export type CreateTeamType = z.infer<typeof CreateTeamSchema>;
 
 export type changeRoleInputType = z.infer<typeof changeRoleSchema>;
 
-export const default_teamLogo =
-  "https://pub-ff2ca37b533641ffa6a9cffe678a70d6.r2.dev/teamLogos/default.jpeg";
+export const default_teamLogo = `${process.env.R2_BUCKET_PUBLIC_URL}/teamLogos/default.png`;

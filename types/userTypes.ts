@@ -59,5 +59,4 @@ export type partialUser = {
 
 export type UserWithoutPassowrd = Omit<User, "password">;
 
-export const default_photo =
-  "https://pub-ff2ca37b533641ffa6a9cffe678a70d6.r2.dev/images/default.jpeg";
+export const default_photo = `${process.env.R2_BUCKET_PUBLIC_URL}/default.jpg`;

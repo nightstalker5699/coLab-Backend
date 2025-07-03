@@ -13,6 +13,7 @@ import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./swagger";
 import passport from "./helpers/authhandler";
 import { protect, validateSession } from "./middlewares/protectRoute";
+import { errorHandler } from "./helpers/errorHandler";
 const app = express();
 
 app.use(morgan("dev")); // Logging middleware
@@ -39,12 +40,6 @@ app.use(protect);
 app.use("/api/users", UserRouter);
 app.use("/api/teams", teamRouter);
 
-app.use((error: any, req: Request, res: Response, next: NextFunction) => {
-  console.error("Error occurred:", error);
-  res.status(error.statusCode || 500).json({
-    status: error.status || "error",
-    message: error.message || "Internal Server Error",
-  });
-});
+app.use(errorHandler);
 
 export default app;

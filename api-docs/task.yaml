@@ -1,0 +1,436 @@
+openapi: 3.0.3
+info:
+  title: Task Management API
+  description: API for creating and retrieving tasks within teams
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+  - url: https://staging-api.example.com/v1
+    description: Staging server
+
+paths:
+  /api/teams/{teamId}/tasks:
+    get:
+      summary: Get tasks for a team
+      description: Retrieves all tasks for a specific team with optional filtering
+      operationId: getTasks
+      tags:
+        - Tasks
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          description: The unique identifier of the team
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+        - name: taskCategoryId
+          in: query
+          required: false
+          description: Filter tasks by category ID
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174001"
+        - name: assignedToId
+          in: query
+          required: false
+          description: Filter tasks by assigned user ID
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174002"
+      responses:
+        "200":
+          description: Tasks retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  data:
+                    type: object
+                    properties:
+                      tasks:
+                        type: object
+                        description: Tasks grouped by status
+                        additionalProperties:
+                          type: array
+                          items:
+                            $ref: "#/components/schemas/Task"
+                        example:
+                          PENDING:
+                            - id: "task-1"
+                              taskName: "Design mockups"
+                              taskDescription: "Create initial design mockups for the project"
+                              taskDeadline: "2024-12-31T23:59:59Z"
+                              taskStatus: "PENDING"
+                              taskPriority: "HIGH"
+                              attachedFile: "https://example.com/files/mockup.png"
+                              assignedBy:
+                                user: "john_doe"
+                          IN_PROGRESS:
+                            - id: "task-2"
+                              taskName: "Implement authentication"
+                              taskDescription: "Add user authentication to the application"
+                              taskDeadline: "2024-11-30T23:59:59Z"
+                              taskStatus: "IN_PROGRESS"
+                              taskPriority: "MEDIUM"
+                              assignedBy:
+                                user: "jane_smith"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    post:
+      summary: Create a new task
+      description: Creates a new task within a team. Requires LEADER or OWNER permissions.
+      operationId: createTask
+      tags:
+        - Tasks
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          description: The unique identifier of the team
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - taskName
+                - taskDescription
+                - taskDeadline
+              properties:
+                taskName:
+                  type: string
+                  maxLength: 50
+                  description: The name of the task
+                  example: "Design mockups"
+                taskDescription:
+                  type: string
+                  maxLength: 255
+                  description: Detailed description of the task
+                  example: "Create initial design mockups for the new project dashboard"
+                taskDeadline:
+                  type: string
+                  format: date-time
+                  description: The deadline for the task (must be in the future)
+                  example: "2024-12-31T23:59:59Z"
+                taskStatus:
+                  $ref: "#/components/schemas/TaskStatus"
+                taskPriority:
+                  $ref: "#/components/schemas/TaskPriority"
+                taskCategoryId:
+                  type: string
+                  format: uuid
+                  description: The category ID for the task
+                  example: "123e4567-e89b-12d3-a456-426614174001"
+                assignedToId:
+                  type: string
+                  format: uuid
+                  description: The user ID to assign the task to
+                  example: "123e4567-e89b-12d3-a456-426614174002"
+                attachedFile:
+                  type: string
+                  format: binary
+                  description: Optional file attachment for the task
+      responses:
+        "200":
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      task:
+                        $ref: "#/components/schemas/TaskCreated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+components:
+  schemas:
+    TaskStatus:
+      type: string
+      enum:
+        - ISSUED
+        - IN_PROGRESS
+        - IN_REVIEW
+        - DONE
+        - ASSIGNED
+      description: The current status of the task
+      example: "PENDING"
+
+    TaskPriority:
+      type: string
+      enum:
+        - LOW
+        - MEDIUM
+        - HIGH
+      description: The priority level of the task
+      example: "HIGH"
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the task
+          example: "123e4567-e89b-12d3-a456-426614174003"
+        taskName:
+          type: string
+          maxLength: 50
+          description: The name of the task
+          example: "Design mockups"
+        taskDescription:
+          type: string
+          maxLength: 255
+          description: Detailed description of the task
+          example: "Create initial design mockups for the new project dashboard"
+        taskDeadline:
+          type: string
+          format: date-time
+          description: The deadline for the task
+          example: "2024-12-31T23:59:59Z"
+        taskStatus:
+          $ref: "#/components/schemas/TaskStatus"
+        taskPriority:
+          $ref: "#/components/schemas/TaskPriority"
+        attachedFile:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to the attached file
+          example: "https://example.com/files/mockup.png"
+        taskCategoryId:
+          type: string
+          format: uuid
+          nullable: true
+          description: The category ID for the task
+          example: "123e4567-e89b-12d3-a456-426614174001"
+        assignedToId:
+          type: string
+          format: uuid
+          nullable: true
+          description: The user ID assigned to the task
+          example: "123e4567-e89b-12d3-a456-426614174002"
+        assignedBy:
+          type: object
+          properties:
+            user:
+              type: string
+              description: Username of the person who assigned the task
+              example: "john_doe"
+        createdAt:
+          type: string
+          format: date-time
+          description: When the task was created
+          example: "2024-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the task was last updated
+          example: "2024-01-16T14:20:00Z"
+
+    TaskCreated:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the created task
+          example: "123e4567-e89b-12d3-a456-426614174003"
+        taskName:
+          type: string
+          example: "Design mockups"
+        taskDescription:
+          type: string
+          example: "Create initial design mockups for the new project dashboard"
+        taskDeadline:
+          type: string
+          format: date-time
+          example: "2024-12-31T23:59:59Z"
+        taskStatus:
+          $ref: "#/components/schemas/TaskStatus"
+        taskPriority:
+          $ref: "#/components/schemas/TaskPriority"
+        attachedFile:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://example.com/files/mockup.png"
+        taskCategoryId:
+          type: string
+          format: uuid
+          nullable: true
+          example: "123e4567-e89b-12d3-a456-426614174001"
+        assignedById:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174004"
+        assignedToId:
+          type: string
+          format: uuid
+          nullable: true
+          example: "123e4567-e89b-12d3-a456-426614174002"
+        teamId:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+    Error:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "error"
+        message:
+          type: string
+          description: Error message describing what went wrong
+          example: "Validation failed"
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "taskName"
+              message:
+                type: string
+                example: "Task name is required"
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: "error"
+            message: "Invalid input data"
+            errors:
+              - field: "taskDeadline"
+                message: "you must set deadline later than this"
+
+    Unauthorized:
+      description: Unauthorized - authentication required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: "error"
+            message: "Authentication required"
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: "error"
+            message: "Insufficient permissions. LEADER or OWNER role required."
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: "error"
+            message: "Team not found"
+
+    UnprocessableEntity:
+      description: Unprocessable Entity - validation errors
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: "error"
+            message: "Validation failed"
+            errors:
+              - field: "taskName"
+                message: "you can't use more than 50 characters"
+
+    PayloadTooLarge:
+      description: Payload too large - file size exceeds limit
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: "error"
+            message: "File size exceeds maximum limit"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: "error"
+            message: "Internal server error"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Tasks
+    description: Task management operations

@@ -65,3 +65,11 @@ export const imageToBody = (bodyLocation: string, location: string) =>
     }
     next();
   });
+
+export const imagePathExtender = (path: string, extender: string) => {
+  let paths = path.split("/");
+  let file = paths.pop();
+  paths.push(extender);
+  paths.push(file as string);
+  return paths.join("/");
+};

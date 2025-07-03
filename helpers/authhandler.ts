@@ -10,6 +10,7 @@ import {
   googleSignin,
   githubSignin,
 } from "../controllers/authController";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 const User = client.user;
 
@@ -42,7 +43,10 @@ export const authhandler = (authType: string) => {
   return catchReqAsync(
     async (req: IRequest, res: Response, next: NextFunction) => {
       const auth = await authenticateAsync(req, res, next, authType);
-      if (auth instanceof appError) {
+      if (
+        auth instanceof appError ||
+        auth instanceof PrismaClientKnownRequestError
+      ) {
         return next(auth);
       }
       await loginAsync(req, auth as IUser);

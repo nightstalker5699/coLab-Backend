@@ -110,21 +110,21 @@ model Task {
   taskName        String   @db.VarChar(50)
   taskDescription String   @db.VarChar(255)
   taskDeadline    DateTime
-  attachedFile    String?  @db.VarChar(60)
-  taskStatus      Status   @default(ASSIGNED)
+  attachedFile    String?  @db.VarChar(150)
+  taskStatus      Status   @default(ISSUED)
   taskPriority    Priority @default(MEDIUM)
   createdAt       DateTime @default(now())
   
   // Foreign Keys
-  taskCategoryId  String   @db.Uuid
+  taskCategoryId  String?   @db.Uuid
   assignedById    String   @db.Uuid
-  assignedToId    String   @db.Uuid
+  assignedToId    String?   @db.Uuid
   teamId          String   @db.Uuid
   
   // Relations
-  taskCategory    TaskCategory @relation(fields: [taskCategoryId], references: [id])
+  taskCategory    TaskCategory? @relation(fields: [taskCategoryId], references: [id])
   assignedBy      UserInTeam   @relation("TaskAssignedBy", fields: [assignedById], references: [id])
-  assignedTo      UserInTeam   @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
+  assignedTo      UserInTeam?   @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
   team            Team         @relation(fields: [teamId], references: [id])
   comments        Comment[]
 

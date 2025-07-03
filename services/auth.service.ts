@@ -14,30 +14,11 @@ export default class AuthService {
   static async signup(userData: createUserType): Promise<IUser> {
     // Check if user already exists
 
-    if (await UserService.checkUsed({ where: { email: userData.email } })) {
-      throw new appError(
-        "User already exists with this email",
-        400,
-        "ValidationError"
-      );
-    }
-
-    if (
-      await UserService.checkUsed({ where: { username: userData.username } })
-    ) {
-      throw new appError(
-        "User already exists with this username",
-        400,
-        "ValidationError"
-      );
-    }
-
     userData.password = await bcrypt.hash(userData.password, 12);
     // Create new user
     const user: IUser = await User.create({
       data: { ...userData, photo: default_photo },
     });
-
     return user;
   }
   static async localLogin(

@@ -29,7 +29,7 @@ export const checkId = (paramName: string, model: any, modelName: string) =>
 
 export const doesHeBelong = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
-    const teamId = req.team?.id as string;
+    const teamId = req.params.teamId as string;
     const relation = await TeamService.getUserRoleInTeam(
       teamId,
       req.user?.id as string

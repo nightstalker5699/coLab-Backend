@@ -5,6 +5,7 @@ import appError from "../helpers/appError";
 import codeCreator from "../helpers/codeCreater";
 import client from "../middlewares/prisma/user.middleware";
 import { changeRoleInputType, CreateTeamType } from "../types/teamTypes";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 export default class TeamService {
   static async checkExist(query: Prisma.TeamCountArgs): Promise<boolean> {
@@ -113,15 +114,6 @@ export default class TeamService {
         "ValidationError"
       );
     }
-    const checkExist = await client.userInTeam.findFirst({
-      where: {
-        teamId: team.id,
-        userId: user.id,
-      },
-    });
-    if (checkExist) {
-      throw new appError("you already in this team", 400, "ValidationError");
-    }
     const relation: IUserInTeam = await client.userInTeam.create({
       data: {
         userId: user.id,
@@ -162,69 +154,38 @@ export default class TeamService {
   }
 
   static async kickUserFromTeam(relationId: string) {
-    try {
-      const userTeam = await client.userInTeam.delete({
-        where: {
-          id: relationId,
-        },
-      });
-      return userTeam;
-    } catch (err: any) {
-      if (err.code === "P2025") {
-        throw new appError("this user doesn't belong to this team", 404);
-      }
-      throw new appError(
-        "an error occurred while trying to kick the user",
-        500,
-        "DatabaseError"
-      );
-    }
+    const userTeam = await client.userInTeam.delete({
+      where: {
+        id: relationId,
+      },
+    });
+    return userTeam;
   }
 
   static async transferOwnership(user: IUser, relationId: string) {
-    try {
-      await client.userInTeam.update({
-        where: {
-          id: relationId,
-        },
-        data: {
-          role: "OWNER",
-        },
-      });
-      await client.userInTeam.update({
-        where: {
-          id: user.id,
-        },
-        data: {
-          role: "MEMBER",
-        },
-      });
-    } catch (err: any) {
-      if (err.code === "P2025") {
-        throw new appError("this user doesn't belong to this team", 404);
-      }
-      throw new appError(
-        "an error occurred while trying to kick the user",
-        500,
-        "DatabaseError"
-      );
-    }
+    await client.userInTeam.update({
+      where: {
+        id: relationId,
+      },
+      data: {
+        role: "OWNER",
+      },
+    });
+    await client.userInTeam.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        role: "MEMBER",
+      },
+    });
   }
 
   static async deleteTeam(teamId: string) {
-    try {
-      await client.team.delete({
-        where: {
-          id: teamId,
-        },
-      });
-    } catch (err) {
-      console.log(err);
-      throw new appError(
-        "an error occurred while trying to kick the user",
-        500,
-        "DatabaseError"
-      );
-    }
+    await client.team.delete({
+      where: {
+        id: teamId,
+      },
+    });
   }
 }

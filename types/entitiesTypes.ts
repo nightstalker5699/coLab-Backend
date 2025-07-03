@@ -18,13 +18,13 @@ export interface IUserInTeam extends UserInTeam {
 }
 
 export interface ITaskCategory extends TaskCategory {
-  team: ITeam;
+  team?: ITeam;
   tasks?: ITask[];
 }
 
 export interface ITask extends Task {
-  team: ITeam;
+  team?: ITeam;
   taskCategory?: ITaskCategory;
-  assignedTo: IUserInTeam;
-  assignedBy: IUserInTeam;
+  assignedTo?: IUserInTeam;
+  assignedBy?: IUserInTeam;
 }

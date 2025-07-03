@@ -1,7 +1,6 @@
 import teamService from "../services/team.service";
 import { catchReqAsync } from "../helpers/catchAsync";
 import appError from "../helpers/appError";
-import { Response, NextFunction } from "express";
 import { ITeam, IUser, IUserInTeam } from "../types/entitiesTypes";
 import {
   changeRoleSchema,
@@ -10,29 +9,9 @@ import {
   updateTeamSchema,
 } from "../types/teamTypes";
 import { z } from "zod";
-import { IRequest } from "../types/generalTypes";
 import ValidateInput, { validateId } from "../helpers/ValidateInput";
 import { fileRemover, fileuploader } from "../helpers/image.handle";
-import TeamService from "../services/team.service";
-
-const teamObjectFormatter = (team: ITeam, userId: string) => {
-  return {
-    id: team.id,
-    teamName: team.teamName,
-    teamLogo: team.teamLogo,
-    theme: team.theme,
-    teamMembers: team.userInTeams?.map((relation) => {
-      let user = relation.user;
-      return {
-        ...user,
-        teamRole: relation.role,
-        joinAt: relation.joinedAt,
-        relationId: relation.id,
-        isMe: userId == user?.id ? true : false,
-      };
-    }),
-  };
-};
+import { teamObjectFormatter } from "../helpers/objectFormatter";
 
 export const createTeam = catchReqAsync(async (req, res, next) => {
   const data = ValidateInput(req.body, CreateTeamSchema);
@@ -180,7 +159,7 @@ export const transferOwnership = catchReqAsync(async (req, res, next) => {
     return next(new appError("invalid user Id", 400));
   }
 
-  await TeamService.transferOwnership(req.user as any, relationId);
+  await teamService.transferOwnership(req.user as any, relationId);
 
   res.status(200).json({
     status: "success",
