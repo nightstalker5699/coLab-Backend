@@ -155,7 +155,7 @@ export const leaveTeam = catchReqAsync(async (req, res, next) => {
 export const transferOwnership = catchReqAsync(async (req, res, next) => {
   const { relationId } = req.body;
 
-  if (!relationId || !(await validateId.safeParseAsync(relationId)).success) {
+  if (validateId(relationId)) {
     return next(new appError("invalid user Id", 400));
   }
 

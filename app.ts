@@ -20,7 +20,7 @@ app.use(morgan("dev")); // Logging middleware
 app.use(corsSettings);
 app.options("/*flight", cors()); // Enable pre-flight requests for all routes
 
-app.use(express.json()); // conver json to req object
+app.use(express.json()); // convert json to req object
 
 app.use(express.urlencoded({ extended: true }));
 
@@ -32,7 +32,7 @@ app.use(passport.session()); // Initialize passport session
 
 app.use(cookieParser());
 
-app.use(validateSession); // Middleware to validate user session
+// app.use(validateSession); // Middleware to validate user session
 app.use("/api", authRouter);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 

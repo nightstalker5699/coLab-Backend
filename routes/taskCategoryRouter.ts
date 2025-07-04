@@ -1,11 +1,13 @@
 import express from "express";
 import {
+  addToReq,
   checkId,
   doesHeBelong,
   requirePermission,
 } from "../middlewares/teamsValidation.middleware";
 import {
   createTaskCategory,
+  deleteTaskCategory,
   getAllTaskCategory,
   updateTaskCategory,
 } from "../controllers/taskCategoryController";
@@ -16,9 +18,9 @@ const router = express.Router({
 
 router
   .route("/")
-  .get(checkId("teamId", client.team, "team"), doesHeBelong, getAllTaskCategory)
+  .get(checkId("teamId"), doesHeBelong, getAllTaskCategory)
   .post(
-    checkId("teamId", client.team, "team"),
+    checkId("teamId"),
     doesHeBelong,
     requirePermission("LEADER", "OWNER"),
     createTaskCategory
@@ -27,15 +29,18 @@ router
 router
   .route("/:taskCategoryId")
   .patch(
-    checkId("teamId", client.team, "team"),
+    checkId("teamId"),
+    checkId("taskCategoryId"),
     doesHeBelong,
     requirePermission("LEADER", "OWNER"),
+
     updateTaskCategory
   )
   .delete(
-    checkId("teamId", client.team, "team"),
+    checkId("teamId"),
+    checkId("taskCategoryId"),
     doesHeBelong,
     requirePermission("LEADER", "OWNER"),
-    updateTaskCategory
+    deleteTaskCategory
   );
 export default router;

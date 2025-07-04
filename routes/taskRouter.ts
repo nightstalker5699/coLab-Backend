@@ -1,22 +1,52 @@
 import Express from "express";
 import {
+  addToReq,
+  checkId,
   doesHeBelong,
   requirePermission,
 } from "../middlewares/teamsValidation.middleware";
 import { imageHandle, imageToBody } from "../helpers/image.handle";
-import { createTask, getTasks } from "../controllers/taskController";
-
+import {
+  changeTaskStatus,
+  createTask,
+  deleteTask,
+  getTasks,
+  updateTask,
+} from "../controllers/taskController";
 const router = Express.Router({ mergeParams: true });
 
 router
   .route("/")
-  .get(doesHeBelong, getTasks)
+  .get(checkId("teamId"), doesHeBelong, getTasks)
   .post(
+    checkId("teamId"),
     doesHeBelong,
     requirePermission("LEADER", "OWNER"),
     imageHandle.single("attachedFile"),
     imageToBody("attachedFile", "teams"),
     createTask
+  );
+router
+  .route("/:taskId/status")
+  .patch(checkId("teamId"), checkId("taskId"), doesHeBelong, changeTaskStatus);
+
+router
+  .route("/:taskId")
+  .patch(
+    checkId("teamId"),
+    checkId("taskId"),
+    doesHeBelong,
+    requirePermission("LEADER", "OWNER"),
+    imageHandle.single("attachedFile"),
+    imageToBody("attachedFile", "teams"),
+    updateTask
+  )
+  .delete(
+    checkId("teamId"),
+    checkId("taskId"),
+    doesHeBelong,
+    requirePermission("LEADER", "OWNER"),
+    deleteTask
   );
 
 export default router;

@@ -12,6 +12,7 @@ import {
   updateMyTeam,
 } from "../controllers/teamController";
 import {
+  addToReq,
   checkId,
   doesHeBelong,
   requirePermission,
@@ -31,25 +32,48 @@ router
     imageToBody("teamLogo", "teamLogos"),
     createTeam
   );
+
 router.post("/joinTeam/:code", joinTeam);
 
 router
   .route("/:teamId")
-  .get(checkId("teamId", client.team, "team"), doesHeBelong, getTeam)
+  .get(checkId("teamId"), doesHeBelong, getTeam)
   .patch(
+    checkId("teamId"),
     doesHeBelong,
     requirePermission("OWNER"),
     imageHandle.single("teamLogo"),
     imageToBody("teamLogo", "teamLogos"),
     updateMyTeam
   )
-  .delete(doesHeBelong, requirePermission("OWNER"), deleteTeam);
+  .delete(
+    checkId("teamId"),
+    doesHeBelong,
+    requirePermission("OWNER"),
+    deleteTeam
+  );
+
 router
   .route("/:teamId/members/:relationId")
-  .delete(doesHeBelong, requirePermission("OWNER"), kickUserFromTeam)
-  .patch(doesHeBelong, requirePermission("OWNER"), changeRole);
-router.delete("/:teamId/leave", doesHeBelong, leaveTeam);
-router.patch("/:teamId/transferownership", doesHeBelong, transferOwnership);
+  .delete(
+    checkId("teamId"),
+    doesHeBelong,
+    requirePermission("OWNER"),
+    kickUserFromTeam
+  )
+  .patch(
+    checkId("teamId"),
+    doesHeBelong,
+    requirePermission("OWNER"),
+    changeRole
+  );
+router.delete("/:teamId/leave", checkId("teamId"), doesHeBelong, leaveTeam);
+router.patch(
+  "/:teamId/transferownership",
+  checkId("teamId"),
+  doesHeBelong,
+  transferOwnership
+);
 router.use("/:teamId/taskCategories", taskCategoryRouter);
 router.use("/:teamId/tasks", taskRouter);
 export default router;

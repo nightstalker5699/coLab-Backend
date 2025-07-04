@@ -32,6 +32,7 @@ export const fileuploader = async (file: any, key: string) => {
     });
 
     const response = await r2Client.send(command);
+    console.log(response);
     return response;
   } catch (error) {
     console.error("Error uploading image:", error);
@@ -48,7 +49,7 @@ export const fileRemover = async (fileUrl: string) => {
       Key: Key,
     });
     const response = await r2Client.send(command);
-
+    console.log(response);
     return response;
   } catch (error) {
     console.log("Error deleting resource:", error);

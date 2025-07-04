@@ -38,3 +38,17 @@ const sessionSettings = Session({
 });
 
 export default sessionSettings;
+
+export const sessionDeleter = async (userId: string) => {
+  const keys = await redisClient.keys("sessions:*");
+  for (const key of keys) {
+    const sessionData = await redisClient.get(key);
+    if (sessionData) {
+      const session = JSON.parse(sessionData);
+      if (session.passport && session.passport.user === userId) {
+        await redisClient.del(key);
+      }
+    }
+  }
+  console.log("deleted all related sessions");
+};

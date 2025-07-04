@@ -8,7 +8,12 @@ import {
   fileuploader,
   imagePathExtender,
 } from "../helpers/image.handle";
-import { createTaskSchema, taskFilterSchema } from "../types/taskTypes";
+import {
+  changeStatusSchema,
+  createTaskSchema,
+  taskFilterSchema,
+  updateTaskSchema,
+} from "../types/taskTypes";
 import { taskService } from "../services/task.service";
 import { tasksFormatter } from "../helpers/objectFormatter";
 
@@ -51,5 +56,55 @@ export const getTasks = catchReqAsync(async (req, res, next) => {
   return res.status(200).json({
     status: "success",
     data: { tasks },
+  });
+});
+
+export const updateTask = catchReqAsync(async (req, res, next) => {
+  const taskId = req.params.taskId;
+
+  const data = ValidateInput(req.body, updateTaskSchema);
+
+  data.attachedFile = data.attachedFile
+    ? imagePathExtender(data.attachedFile, req.params.teamId)
+    : undefined;
+
+  const updatedTask = await taskService.updateTask(data, taskId);
+
+  if (data.attachedFile) {
+    await fileRemover(req.task?.attachedFile as string);
+    await fileuploader(req.file, data.attachedFile);
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: { task: updatedTask },
+  });
+});
+
+export const changeTaskStatus = catchReqAsync(async (req, res, next) => {
+  const taskId = req.params.taskId;
+
+  const data = ValidateInput(req.body, changeStatusSchema);
+
+  const task = await taskService.updateTask(data, taskId);
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      task,
+    },
+  });
+});
+
+export const deleteTask = catchReqAsync(async (req, res, next) => {
+  const taskId = req.params.taskId;
+  const deletedTask = await taskService.deleteTask(taskId);
+
+  if (deletedTask.attachedFile) {
+    await fileRemover(deletedTask.attachedFile);
+  }
+
+  res.status(204).json({
+    status: "success",
   });
 });

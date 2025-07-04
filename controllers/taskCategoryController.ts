@@ -8,7 +8,7 @@ import {
 import { taskCategoryService } from "../services/taskCategory.service";
 import { Prisma } from "@prisma/client";
 export const createTaskCategory = catchReqAsync(async (req, res, next) => {
-  req.body.teamId = req.team?.id;
+  req.body.teamId = req.params.id;
 
   const data = ValidateInput(req.body, createTaskCategorySchema);
 
@@ -23,7 +23,7 @@ export const createTaskCategory = catchReqAsync(async (req, res, next) => {
 export const getAllTaskCategory = catchReqAsync(async (req, res, next) => {
   const query: Prisma.TaskCategoryFindManyArgs = {
     where: {
-      teamId: req.team?.id,
+      teamId: req.params.teamId,
     },
   };
   if (req.query.categoryName) {
@@ -46,12 +46,7 @@ export const getAllTaskCategory = catchReqAsync(async (req, res, next) => {
 
 export const updateTaskCategory = catchReqAsync(async (req, res, next) => {
   const taskCategoryId = req.params.taskCategoryId;
-  if (
-    !taskCategoryId ||
-    !(await validateId.safeParseAsync(taskCategoryId)).success
-  ) {
-    return next(new appError("invalid taskCategory id", 400));
-  }
+
   const data = ValidateInput(req.body, updateTaskCategorySchema);
 
   const TaskCategory = await taskCategoryService.updateTaskCategory(
@@ -66,12 +61,6 @@ export const updateTaskCategory = catchReqAsync(async (req, res, next) => {
 });
 export const deleteTaskCategory = catchReqAsync(async (req, res, next) => {
   const taskCategoryId = req.params.taskCategoryId;
-  if (
-    !taskCategoryId ||
-    !(await validateId.safeParseAsync(taskCategoryId)).success
-  ) {
-    return next(new appError("invalid taskCategory id", 400));
-  }
 
   const TaskCategory = await taskCategoryService.deleteTaskCategory(
     taskCategoryId

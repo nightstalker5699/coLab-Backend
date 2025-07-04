@@ -182,6 +182,201 @@ paths:
           $ref: "#/components/responses/UnprocessableEntity"
         "500":
           $ref: "#/components/responses/InternalServerError"
+  /api/teams/{teamId}/tasks/{taskId}:
+    patch:
+      summary: Update a task
+      description: Updates an existing task within a team. Requires LEADER or OWNER permissions.
+      operationId: updateTask
+      tags:
+        - Tasks
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          description: The unique identifier of the team
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+        - name: taskId
+          in: path
+          required: true
+          description: The unique identifier of the task
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174003"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                taskName:
+                  type: string
+                  maxLength: 50
+                  description: The name of the task
+                  example: "Updated Design mockups"
+                taskDescription:
+                  type: string
+                  maxLength: 255
+                  description: Detailed description of the task
+                  example: "Updated design mockups for the new project dashboard"
+                taskDeadline:
+                  type: string
+                  format: date-time
+                  description: The deadline for the task (must be in the future)
+                  example: "2024-12-31T23:59:59Z"
+                taskStatus:
+                  $ref: "#/components/schemas/TaskStatus"
+                taskPriority:
+                  $ref: "#/components/schemas/TaskPriority"
+                taskCategoryId:
+                  type: string
+                  format: uuid
+                  description: The category ID for the task
+                  example: "123e4567-e89b-12d3-a456-426614174001"
+                assignedToId:
+                  type: string
+                  format: uuid
+                  description: The user ID to assign the task to
+                  example: "123e4567-e89b-12d3-a456-426614174002"
+                attachedFile:
+                  type: string
+                  format: binary
+                  description: Optional file attachment for the task
+      responses:
+        "200":
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  data:
+                    type: object
+                    properties:
+                      task:
+                        $ref: "#/components/schemas/Task"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    delete:
+      summary: Delete a task
+      description: Deletes an existing task from a team. Requires LEADER or OWNER permissions.
+      operationId: deleteTask
+      tags:
+        - Tasks
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          description: The unique identifier of the team
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+        - name: taskId
+          in: path
+          required: true
+          description: The unique identifier of the task
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174003"
+      responses:
+        "204":
+          description: Task deleted successfully
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/teams/{teamId}/tasks/{taskId}/status:
+    patch:
+      summary: Change task status
+      description: Updates the status of an existing task within a team. All team members can change task status.
+      operationId: changeTaskStatus
+      tags:
+        - Tasks
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          description: The unique identifier of the team
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+        - name: taskId
+          in: path
+          required: true
+          description: The unique identifier of the task
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174003"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - taskStatus
+              properties:
+                taskStatus:
+                  $ref: "#/components/schemas/TaskStatus"
+      responses:
+        "200":
+          description: Task status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  data:
+                    type: object
+                    properties:
+                      task:
+                        $ref: "#/components/schemas/Task"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
 components:
   schemas:

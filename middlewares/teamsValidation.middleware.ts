@@ -3,18 +3,22 @@ import { catchReqAsync } from "../helpers/catchAsync";
 import appError from "../helpers/appError";
 import { IRequest } from "../types/generalTypes";
 import TeamService from "../services/team.service";
-import { ITeam } from "../types/entitiesTypes";
-import { validateId } from "../helpers/ValidateInput";
-import { ZodError } from "zod";
+import z from "zod";
 import { Role } from "@prisma/client";
 
-export const checkId = (paramName: string, model: any, modelName: string) =>
+export const checkId = (paramName: string) =>
   catchReqAsync(async (req: IRequest, res: Response, next: NextFunction) => {
     const id = req.params[paramName];
-    if (!id || !(await validateId.safeParseAsync(id)).success) {
+    if (!id || !z.string().uuid().safeParse(id).success) {
       console.log(id);
-      return next(new appError("invalid id", 400));
+      return next(new appError(`invalid ${paramName}`, 400));
     }
+    next();
+  });
+
+export const addToReq = (paramName: string, model: any, modelName: string) =>
+  catchReqAsync(async (req: IRequest, res: Response, next: NextFunction) => {
+    const id = req.params[paramName];
     const object = await model.findUnique({
       where: {
         id,

@@ -12,6 +12,8 @@ import { IUser } from "../types/entitiesTypes";
 import { IRequest } from "../types/generalTypes";
 import ValidateInput from "../helpers/ValidateInput";
 import { fileRemover, fileuploader } from "../helpers/image.handle";
+import { sessionDeleter } from "../middlewares/Session";
+import { session } from "passport";
 export const getMe = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
     (req.user as any).password = null;
@@ -48,6 +50,9 @@ export const updateMe = catchReqAsync(async (req, res, next) => {
     if (req.user?.photo !== default_photo)
       await fileRemover(req.user?.photo as string);
   }
+  if (data.newpassword) {
+    sessionDeleter(req.user?.id as string);
+  }
   await loginAsync(req, userObj);
   res.status(200).json({
     status: "success",
@@ -75,6 +80,9 @@ export const updateUser = catchReqAsync(async (req, res, next) => {
     if (user.photo !== default_photo) await fileRemover(user.photo as string);
   }
 
+  if (data.newpassword) {
+    sessionDeleter(user.id);
+  }
   res.status(200).json({
     status: "success",
     data: { user: userObj },
@@ -82,6 +90,7 @@ export const updateUser = catchReqAsync(async (req, res, next) => {
 });
 export const deleteMe = catchReqAsync(async (req, res, next) => {
   await userService.deleteUser(req.user?.id as string);
+  sessionDeleter(req.user?.id as string);
   res.status(204).json({
     status: "success",
     data: null,
@@ -98,7 +107,7 @@ export const deleteUser = catchReqAsync(async (req, res, next) => {
     where: { username: req.params.username },
   });
   await userService.deleteUser(user.id);
-
+  sessionDeleter(user.id);
   res.status(204).json({
     status: "success",
     data: null,

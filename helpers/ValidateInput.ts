@@ -33,4 +33,6 @@ const ValidateInput = <T extends ZodSchema>(
 
 export default ValidateInput;
 
-export const validateId = z.string().uuid();
+export const validateId = (id: any) => {
+  return !id || !z.string().uuid().safeParse(id).success;
+};
