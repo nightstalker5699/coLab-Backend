@@ -125,7 +125,7 @@ model Task {
   taskCategory    TaskCategory? @relation(fields: [taskCategoryId], references: [id])
   assignedBy      UserInTeam   @relation("TaskAssignedBy", fields: [assignedById], references: [id])
   assignedTo      UserInTeam?   @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
-  team            Team         @relation(fields: [teamId], references: [id])
+  team            Team         @relation(fields: [teamId], references: [id],onDelete:Cascade)
   comments        Comment[]
 
   @@index([taskCategoryId], name: "task_event_index")

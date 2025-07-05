@@ -38,6 +38,7 @@ export const errorHandler = (
   (error.statusCode = error.statusCode || 500),
     (error.status = error.status || "error");
   let err = error;
+  console.log(error);
   if (error instanceof PrismaClientKnownRequestError) {
     switch (err.code) {
       case "P2002":

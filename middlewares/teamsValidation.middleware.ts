@@ -34,6 +34,9 @@ export const addToReq = (paramName: string, model: any, modelName: string) =>
 export const doesHeBelong = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
     const teamId = req.params.teamId as string;
+    if (!(await TeamService.checkExist({ where: { id: teamId } }))) {
+      return next(new appError("this team does not exist", 404));
+    }
     const relation = await TeamService.getUserRoleInTeam(
       teamId,
       req.user?.id as string
