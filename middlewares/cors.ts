@@ -8,7 +8,7 @@ const corsSettings = cors({
     "http://127.0.0.1:3000",
     "http://localhost:3000",
   ], // Allow all origins
-  methods: ["GET", "POST", "PUT", "DELETE"], // Allow specific methods
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // Allow specific methods
   credentials: true, // Allow credentials (cookies, authorization headers, etc.)
 });
 

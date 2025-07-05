@@ -11,7 +11,6 @@ import {
   getAllTaskCategory,
   updateTaskCategory,
 } from "../controllers/taskCategoryController";
-import client from "../middlewares/prisma/user.middleware";
 const router = express.Router({
   mergeParams: true,
 });
