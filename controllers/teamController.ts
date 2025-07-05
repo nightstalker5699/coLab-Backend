@@ -168,10 +168,11 @@ export const transferOwnership = catchReqAsync(async (req, res, next) => {
 });
 
 export const deleteTeam = catchReqAsync(async (req, res, next) => {
-  await teamService.deleteTeam(req.team?.id as string);
+  const team = await teamService.deleteTeam(req.params?.teamId as string);
 
-  await fileRemover(req.team?.teamLogo as string);
-
+  if (team.teamLogo != default_teamLogo) {
+    await fileRemover(team.teamLogo as string);
+  }
   res.status(204).json({
     status: "success",
   });

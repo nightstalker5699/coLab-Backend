@@ -182,10 +182,11 @@ export default class TeamService {
   }
 
   static async deleteTeam(teamId: string) {
-    await client.team.delete({
+    const team = await client.team.delete({
       where: {
         id: teamId,
       },
     });
+    return team;
   }
 }
