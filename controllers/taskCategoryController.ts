@@ -8,7 +8,7 @@ import {
 import { taskCategoryService } from "../services/taskCategory.service";
 import { Prisma } from "@prisma/client";
 export const createTaskCategory = catchReqAsync(async (req, res, next) => {
-  req.body.teamId = req.params.id;
+  req.body.teamId = req.params.teamId;
 
   const data = ValidateInput(req.body, createTaskCategorySchema);
 
