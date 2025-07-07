@@ -1,4 +1,4 @@
-import { ITask, ITeam } from "../types/entitiesTypes";
+import { ITask, ITeam, IUser } from "../types/entitiesTypes";
 
 export const teamObjectFormatter = (team: ITeam, userId: string) => {
   return {
@@ -20,11 +20,12 @@ export const teamObjectFormatter = (team: ITeam, userId: string) => {
   };
 };
 
-export const tasksFormatter = (tasks: any) => {
+export const tasksFormatter = (tasks: any, relationId: string) => {
   const data = tasks.reduce((holder: any, currentTask: any) => {
     currentTask.assignedBy.user = currentTask.assignedBy?.user?.username;
     const status = currentTask.taskStatus;
     if (!holder[status]) holder[status] = [];
+    currentTask.forMe = relationId == currentTask.assignedToId ? true : false;
     holder[status].push(currentTask);
     return holder;
   }, {} as any);

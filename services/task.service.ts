@@ -40,6 +40,7 @@ export class taskService {
             },
           },
         },
+        assignedToId: true,
       },
       orderBy: {
         createdAt: "asc",
@@ -48,6 +49,32 @@ export class taskService {
     return tasks;
   }
 
+  static async getTask(id: string) {
+    const task = await taskClient.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        assignedBy: {
+          select: {
+            user: {
+              select: {
+                username: true,
+                photo: true,
+              },
+            },
+          },
+        },
+        taskCategory: true,
+      },
+    });
+
+    if (!task) {
+      throw new appError("there is no task with that ID", 404);
+    }
+
+    return task;
+  }
   static async updateTask(data: updateTaskType, taskId: string) {
     const updatedTask = await taskClient.update({
       where: {

@@ -124,7 +124,7 @@ export const getUsers = catchReqAsync(async (req, res, next) => {
   const users: partialUser[] = await userService.getUsersName(
     username as string
   );
-  console.log(users);
+
   res.json({
     status: "sucess",
     data: users,

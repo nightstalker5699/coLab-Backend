@@ -10,6 +10,7 @@ import {
   changeTaskStatus,
   createTask,
   deleteTask,
+  getTask,
   getTasks,
   updateTask,
 } from "../controllers/taskController";
@@ -32,6 +33,7 @@ router
 
 router
   .route("/:taskId")
+  .get(checkId("teamId"), checkId("taskId"), doesHeBelong, getTask)
   .patch(
     checkId("teamId"),
     checkId("taskId"),

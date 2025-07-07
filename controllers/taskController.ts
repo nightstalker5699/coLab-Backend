@@ -50,12 +50,28 @@ export const getTasks = catchReqAsync(async (req, res, next) => {
   const semiTasks = await taskService.getTasks(data);
 
   // 4. Format tasks (likely your grouping logic)
-  const tasks = tasksFormatter(semiTasks);
+  const tasks = tasksFormatter(semiTasks, req.userInTeam?.id as string);
 
   // 5. Return formatted response
   return res.status(200).json({
     status: "success",
     data: { tasks },
+  });
+});
+
+export const getTask = catchReqAsync(async (req, res, next) => {
+  const taskId = req.params.taskId;
+
+  const task = await taskService.getTask(taskId);
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      task: {
+        ...task,
+        forMe: req.userInTeam?.id == task.assignedToId ? true : false,
+      },
+    },
   });
 });
 
