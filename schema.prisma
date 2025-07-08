@@ -137,7 +137,7 @@ model Comment {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   content      String   @db.VarChar(255)
   createdAt    DateTime @default(now())
-  attachedFile String?  @db.VarChar(60)
+  attachedFile String?  @db.VarChar(200)
   userId       String   @db.Uuid
   taskId       String   @db.Uuid
   

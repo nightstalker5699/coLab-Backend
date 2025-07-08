@@ -19,6 +19,12 @@ services:
     image: redis:7.2-alpine
     ports:
       - "6379:6379"
+  frontend:
+    build:
+      context: ../COLAB
+      dockerfile: dockerfile.dev
+    ports:
+      - "3000:3000"
     # depends_on:
     #   - postgres
   # postgres:

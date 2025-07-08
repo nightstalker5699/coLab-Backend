@@ -1,8 +1,5 @@
 import { catchReqAsync } from "../helpers/catchAsync";
-import appError from "../helpers/appError";
-import { ITeam, IUser, IUserInTeam } from "../types/entitiesTypes";
-import { z } from "zod";
-import ValidateInput, { validateId } from "../helpers/ValidateInput";
+import ValidateInput from "../helpers/ValidateInput";
 import {
   fileRemover,
   fileuploader,
@@ -23,7 +20,7 @@ export const createTask = catchReqAsync(async (req, res, next) => {
 
   const data = ValidateInput(req.body, createTaskSchema);
   data.attachedFile = data.attachedFile
-    ? imagePathExtender(data.attachedFile, data.teamId)
+    ? imagePathExtender(data.attachedFile, data.teamId + "/tasks")
     : undefined;
 
   const task = await taskService.createTask(data);

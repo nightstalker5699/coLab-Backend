@@ -59,7 +59,11 @@ export const fileRemover = async (fileUrl: string) => {
 export const imageToBody = (bodyLocation: string, location: string) =>
   catchReqAsync(async (req, res, next) => {
     if (req.file) {
-      req.file.originalname = req.file.originalname.split(" ").join("-");
+      req.file.originalname = req.file.originalname
+        .split(" ")
+        .join("-")
+        .split("/")
+        .join("-");
       req.body[bodyLocation] = `${
         process.env.R2_BUCKET_PUBLIC_URL
       }/${location}/${Date.now()}-${req.file.originalname}`;

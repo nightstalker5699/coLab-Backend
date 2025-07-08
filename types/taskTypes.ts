@@ -1,6 +1,5 @@
 import { Priority, Status } from "@prisma/client";
-import { create } from "domain";
-import { TypeOf, z } from "zod";
+import { z } from "zod";
 
 export const createTaskSchema = z.object({
   taskName: z.string().max(50, "you can't use more than 50 characters"),

@@ -2,53 +2,43 @@ import Express from "express";
 import {
   checkId,
   doesHeBelong,
-  requirePermission,
 } from "../middlewares/teamsValidation.middleware";
 import { imageHandle, imageToBody } from "../helpers/image.handle";
 import {
-  changeTaskStatus,
-  createTask,
-  deleteTask,
-  getTask,
-  getTasks,
-  updateTask,
-} from "../controllers/taskController";
-import commentRouter from "./commentRouter";
+  createComment,
+  deleteComment,
+  updateComment,
+} from "../controllers/commentController";
+
 const router = Express.Router({ mergeParams: true });
 
 router
   .route("/")
-  .get(checkId("teamId"), doesHeBelong, getTasks)
   .post(
-    checkId("teamId"),
-    doesHeBelong,
-    requirePermission("LEADER", "OWNER"),
-    imageHandle.single("attachedFile"),
-    imageToBody("attachedFile", "teams"),
-    createTask
-  );
-router
-  .route("/:taskId/status")
-  .patch(checkId("teamId"), checkId("taskId"), doesHeBelong, changeTaskStatus);
-
-router
-  .route("/:taskId")
-  .get(checkId("teamId"), checkId("taskId"), doesHeBelong, getTask)
-  .patch(
     checkId("teamId"),
     checkId("taskId"),
     doesHeBelong,
-    requirePermission("LEADER", "OWNER"),
     imageHandle.single("attachedFile"),
     imageToBody("attachedFile", "teams"),
-    updateTask
+    createComment
+  );
+router
+  .route("/:commentId")
+  .patch(
+    checkId("teamId"),
+    checkId("taskId"),
+    checkId("commentId"),
+    doesHeBelong,
+    imageHandle.single("attachedFile"),
+    imageToBody("attachedFile", "teams"),
+    updateComment
   )
   .delete(
     checkId("teamId"),
     checkId("taskId"),
+    checkId("commentId"),
     doesHeBelong,
-    requirePermission("LEADER", "OWNER"),
-    deleteTask
+    deleteComment
   );
-router.use("/:taskId/comments", commentRouter);
+
 export default router;

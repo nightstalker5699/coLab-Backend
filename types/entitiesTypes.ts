@@ -1,4 +1,11 @@
-import { User, Team, UserInTeam, TaskCategory, Task } from "@prisma/client";
+import {
+  User,
+  Team,
+  UserInTeam,
+  TaskCategory,
+  Task,
+  Comment,
+} from "@prisma/client";
 
 export interface IUser extends User {
   userInTeams?: IUserInTeam[];
@@ -15,6 +22,7 @@ export interface IUserInTeam extends UserInTeam {
   team?: ITeam;
   taskAssignedTo?: ITask[];
   taskAssignedBy?: ITask[];
+  comments?: IComment[];
 }
 
 export interface ITaskCategory extends TaskCategory {
@@ -27,4 +35,10 @@ export interface ITask extends Task {
   taskCategory?: ITaskCategory;
   assignedTo?: IUserInTeam;
   assignedBy?: IUserInTeam;
+  comments?: IComment[];
+}
+
+export interface IComment extends Comment {
+  user?: IUser;
+  task?: ITask;
 }

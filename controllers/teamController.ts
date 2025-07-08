@@ -1,7 +1,7 @@
 import teamService from "../services/team.service";
 import { catchReqAsync } from "../helpers/catchAsync";
 import appError from "../helpers/appError";
-import { ITeam, IUser, IUserInTeam } from "../types/entitiesTypes";
+import { IUser, IUserInTeam } from "../types/entitiesTypes";
 import {
   changeRoleSchema,
   CreateTeamSchema,

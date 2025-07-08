@@ -6,14 +6,12 @@ import {
   default_photo,
   partialUser,
   updateUserSchema,
-  updateUserType,
 } from "../types/userTypes";
 import { IUser } from "../types/entitiesTypes";
 import { IRequest } from "../types/generalTypes";
 import ValidateInput from "../helpers/ValidateInput";
 import { fileRemover, fileuploader } from "../helpers/image.handle";
 import { sessionDeleter } from "../middlewares/Session";
-import { session } from "passport";
 export const getMe = catchReqAsync(
   async (req: IRequest, res: Response, next: NextFunction) => {
     (req.user as any).password = null;

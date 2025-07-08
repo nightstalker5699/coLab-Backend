@@ -1,0 +1,327 @@
+openapi: 3.0.3
+info:
+  title: Task Management API - Comments
+  description: API for managing comments on tasks within teams
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+  - url: https://staging-api.example.com/v1
+    description: Staging server
+
+paths:
+  /api/teams/{teamId}/tasks/{taskId}/comments:
+    post:
+      summary: Create a new comment
+      description: Creates a new comment on a task within a team. All team members can create comments.
+      operationId: createComment
+      tags:
+        - Comments
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          description: The unique identifier of the team
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+        - name: taskId
+          in: path
+          required: true
+          description: The unique identifier of the task
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174003"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+                  maxLength: 255
+                  description: The content of the comment
+                  example: "This looks great! I have some suggestions for improvement."
+                attachedFile:
+                  type: string
+                  format: binary
+                  description: Optional file attachment for the comment
+      responses:
+        "200":
+          description: Comment created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  data:
+                    type: object
+                    properties:
+                      comment:
+                        $ref: "#/components/schemas/Comment"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/teams/{teamId}/tasks/{taskId}/comments/{commentId}:
+    patch:
+      summary: Update a comment
+      description: Updates an existing comment on a task. Only the comment author can update their comment.
+      operationId: updateComment
+      tags:
+        - Comments
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          description: The unique identifier of the team
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+        - name: taskId
+          in: path
+          required: true
+          description: The unique identifier of the task
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174003"
+        - name: commentId
+          in: path
+          required: true
+          description: The unique identifier of the comment
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174005"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  maxLength: 255
+                  description: The updated content of the comment
+                  example: "Updated comment with new information."
+                attachedFile:
+                  type: string
+                  format: binary
+                  description: Optional file attachment for the comment (replaces existing file if present)
+      responses:
+        "200":
+          description: Comment updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "success"
+                  data:
+                    type: object
+                    properties:
+                      comment:
+                        $ref: "#/components/schemas/Comment"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+components:
+  schemas:
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the comment
+          example: "123e4567-e89b-12d3-a456-426614174005"
+        userId:
+          type: string
+          format: uuid
+          description: The ID of the user who created the comment
+          example: "123e4567-e89b-12d3-a456-426614174002"
+        taskId:
+          type: string
+          format: uuid
+          description: The ID of the task this comment belongs to
+          example: "123e4567-e89b-12d3-a456-426614174003"
+        content:
+          type: string
+          maxLength: 255
+          description: The content of the comment
+          example: "This looks great! I have some suggestions for improvement."
+        attachedFile:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to the attached file
+          example: "https://example.com/files/teams/123e4567-e89b-12d3-a456-426614174000/comments/attachment.pdf"
+        createdAt:
+          type: string
+          format: date-time
+          description: When the comment was created
+          example: "2024-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the comment was last updated
+          example: "2024-01-16T14:20:00Z"
+
+    Error:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "error"
+        message:
+          type: string
+          description: Error message describing what went wrong
+          example: "Validation failed"
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "content"
+              message:
+                type: string
+                example: "Content is required"
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: "error"
+            message: "Invalid input data"
+            errors:
+              - field: "content"
+                message: "Content is required"
+
+    Unauthorized:
+      description: Unauthorized - authentication required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: "error"
+            message: "Authentication required"
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: "error"
+            message: "You don't have permission to access this resource"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          examples:
+            taskNotFound:
+              value:
+                status: "error"
+                message: "Task not found"
+            commentNotFound:
+              value:
+                status: "error"
+                message: "there is comment with that ID"
+
+    UnprocessableEntity:
+      description: Unprocessable Entity - validation errors
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: "error"
+            message: "Validation failed"
+            errors:
+              - field: "content"
+                message: "you can't write more than 255 letters"
+
+    PayloadTooLarge:
+      description: Payload too large - file size exceeds limit
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: "error"
+            message: "File size exceeds maximum limit"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            status: "error"
+            message: "Internal server error"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Comments
+    description: Comment management operations for tasks

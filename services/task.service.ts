@@ -1,14 +1,11 @@
 import client from "../middlewares/prisma/user.middleware";
 import appError from "../helpers/appError";
 
-import { Prisma } from "@prisma/client";
-
 import {
   createTaskType,
   taskFilterType,
   updateTaskType,
 } from "../types/taskTypes";
-import { ITask } from "../types/entitiesTypes";
 const taskClient = client.task;
 
 export class taskService {
@@ -55,6 +52,7 @@ export class taskService {
         id,
       },
       include: {
+        comments: true,
         assignedBy: {
           select: {
             user: {
