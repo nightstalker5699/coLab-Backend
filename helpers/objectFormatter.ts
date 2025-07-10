@@ -22,20 +22,18 @@ export const teamObjectFormatter = (team: ITeam, userId: string) => {
 };
 
 export const tasksFormatter = (tasks: any, relationId: string) => {
-  const statues = Object.values(Status) as [Status, ...Status[]];
-
-  const holder = statues.reduce((holder: any, item: any) => {
-    holder[item] = [];
-
-    return holder;
+  // Initialize holder with all statuses
+  const data = Object.values(Status).reduce((acc, status) => {
+    acc[status] = [];
+    return acc;
   }, {} as any);
 
-  const data = tasks.reduce((holder: any, currentTask: any) => {
-    currentTask.assignedBy.user = currentTask.assignedBy?.user?.username;
-    const status = currentTask.taskStatus;
-    currentTask.forMe = relationId == currentTask.assignedToId ? true : false;
-    holder[status].push(currentTask);
-    return holder;
-  }, holder);
+  // Process and categorize tasks
+  tasks.forEach((task: any) => {
+    task.assignedBy.user = task.assignedBy?.user?.username;
+    task.forMe = relationId === task.assignedToId;
+    data[task.taskStatus].push(task);
+  });
+
   return data;
 };
