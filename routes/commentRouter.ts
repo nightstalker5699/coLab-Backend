@@ -40,5 +40,4 @@ router
     doesHeBelong,
     deleteComment
   );
-
 export default router;

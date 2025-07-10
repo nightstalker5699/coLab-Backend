@@ -1,3 +1,4 @@
+import { Status } from "@prisma/client";
 import { ITask, ITeam, IUser } from "../types/entitiesTypes";
 
 export const teamObjectFormatter = (team: ITeam, userId: string) => {
@@ -21,13 +22,20 @@ export const teamObjectFormatter = (team: ITeam, userId: string) => {
 };
 
 export const tasksFormatter = (tasks: any, relationId: string) => {
+  const statues = Object.values(Status) as [Status, ...Status[]];
+
+  const holder = statues.reduce((holder: any, item: any) => {
+    holder[item] = [];
+
+    return holder;
+  }, {} as any);
+
   const data = tasks.reduce((holder: any, currentTask: any) => {
     currentTask.assignedBy.user = currentTask.assignedBy?.user?.username;
     const status = currentTask.taskStatus;
-    if (!holder[status]) holder[status] = [];
     currentTask.forMe = relationId == currentTask.assignedToId ? true : false;
     holder[status].push(currentTask);
     return holder;
-  }, {} as any);
+  }, holder);
   return data;
 };

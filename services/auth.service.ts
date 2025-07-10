@@ -1,6 +1,5 @@
 import { IUser } from "../types/entitiesTypes";
 import { createUserType, loginSchema, default_photo } from "../types/userTypes";
-import UserService from "./user.service";
 import appError from "../helpers/appError";
 import client from "../middlewares/prisma/user.middleware";
 import bcrypt from "bcrypt";

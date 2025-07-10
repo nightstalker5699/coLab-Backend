@@ -13,7 +13,7 @@ const UniqueConstraintHandler = (err: PrismaClientKnownRequestError) => {
 };
 const ForeignKeyConstraintHandler = (err: PrismaClientKnownRequestError) => {
   return new appError(
-    `Unable to complete operation - one or more referenced items do not exist`,
+    `Unable to complete operation - one or more referenced items do not exist ${err.meta?.constraint}`,
     400
   );
 };
