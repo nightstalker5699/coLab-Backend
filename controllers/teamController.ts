@@ -97,11 +97,11 @@ export const joinTeam = catchReqAsync(async (req, res, next) => {
     return next(new appError("code must be a valid string", 400));
   }
 
-  const updatedTeam = await teamService.joinTeam(req.user as IUser, code);
+  const relation = await teamService.joinTeam(req.user as IUser, code);
 
   res.status(201).json({
     status: "success",
-    data: { team: updatedTeam },
+    data: { relation },
   });
 });
 

@@ -44,7 +44,7 @@ export const getTasks = catchReqAsync(async (req, res, next) => {
   const data = ValidateInput(query, taskFilterSchema);
 
   // 3. Get tasks from service layer
-  const semiTasks = await taskService.getTasks(data);
+  const semiTasks = await taskService.getTasks(data, JSON.stringify(req.query));
 
   // 4. Format tasks (likely your grouping logic)
   const tasks = tasksFormatter(semiTasks, req.userInTeam?.id as string);
@@ -58,8 +58,8 @@ export const getTasks = catchReqAsync(async (req, res, next) => {
 
 export const getTask = catchReqAsync(async (req, res, next) => {
   const taskId = req.params.taskId;
-
-  const task = await taskService.getTask(taskId);
+  const teamId = req.params.teamId;
+  const task = await taskService.getTask(taskId, teamId);
 
   res.status(200).json({
     status: "success",

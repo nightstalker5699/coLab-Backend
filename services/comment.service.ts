@@ -1,15 +1,22 @@
 import client from "../middlewares/prisma/user.middleware";
 import appError from "../helpers/appError";
 import { createCommentType, updateCommentType } from "../types/commentTypes";
+import { cacheService } from "./cache.service";
 
 const commentClient = client.comment;
 
 export class commentService {
-  static async createComment(data: createCommentType) {
+  static async createComment(data: createCommentType, teamId: string) {
     const comment = await commentClient.create({
       data,
     });
-
+    const key = cacheService.genereteKey(
+      "teams",
+      teamId,
+      "tasks",
+      comment.taskId
+    );
+    await cacheService.del(key);
     return comment;
   }
 
@@ -27,7 +34,8 @@ export class commentService {
   static async updateComment(
     data: updateCommentType,
     id: string,
-    userId: string
+    userId: string,
+    teamId: string
   ) {
     const comment = await commentClient.update({
       where: {
@@ -36,12 +44,25 @@ export class commentService {
       },
       data,
     });
+    const key = cacheService.genereteKey(
+      "teams",
+      teamId,
+      "tasks",
+      comment.taskId
+    );
+    await cacheService.del(key);
     return comment;
   }
 
-  static async deleteComment(id: string, userId: string) {
+  static async deleteComment(id: string, userId: string, teamId: string) {
     const comment = await commentClient.delete({ where: { id, userId } });
-
+    const key = cacheService.genereteKey(
+      "teams",
+      teamId,
+      "tasks",
+      comment.taskId
+    );
+    await cacheService.del(key);
     return comment;
   }
 }

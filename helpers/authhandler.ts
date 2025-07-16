@@ -21,21 +21,11 @@ passport.use(githubSignin);
 
 // Serializing and deserializing user instances to and from the session
 passport.serializeUser((user: any, done) => {
-  done(null, user.id);
+  done(null, user);
 });
 
-passport.deserializeUser(async (id: string, done) => {
-  try {
-    const user: IUser = (await User.findUnique({
-      where: { id },
-      omit: {
-        password: false,
-      },
-    })) as IUser;
-    done(null, user);
-  } catch (error) {
-    done(error);
-  }
+passport.deserializeUser(async (user: any, done) => {
+  done(null, user);
 });
 
 // Function to handle authentication Irequests

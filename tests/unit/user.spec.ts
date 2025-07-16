@@ -1,14 +1,14 @@
 import { SystemRole } from "@prisma/client";
-import { signup } from "../controllers/authController";
-import { loginAsync } from "../helpers/catchAsync";
-import ValidateInput from "../helpers/ValidateInput";
-import AuthService from "../services/auth.service";
-import { IRequest } from "../types/generalTypes";
+import { signup } from "../../controllers/authController";
+import { loginAsync } from "../../helpers/catchAsync";
+import ValidateInput from "../../helpers/ValidateInput";
+import AuthService from "../../services/auth.service";
+import { IRequest } from "../../types/generalTypes";
 import { Response } from "express";
 
-jest.mock("../helpers/ValidateInput");
-jest.mock("../services/auth.service");
-jest.mock("../helpers/catchAsync", () => ({
+jest.mock("../../helpers/ValidateInput");
+jest.mock("../../services/auth.service");
+jest.mock("../../helpers/catchAsync", () => ({
   catchReqAsync: (fn: any) => fn,
   catchAuthAsync: (fn: any) => fn,
   loginAsync: jest.fn(),

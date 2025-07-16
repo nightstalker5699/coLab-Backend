@@ -2,9 +2,9 @@ import Session from "express-session";
 import { createClient } from "redis";
 import { RedisStore } from "connect-redis";
 
-const redisClient = createClient({
+export const redisClient = createClient({
   socket: {
-    host: "redis",
+    host: process.env.NODE_ENV === "test" ? "localhost" : "redis",
     port: 6379,
   },
 });

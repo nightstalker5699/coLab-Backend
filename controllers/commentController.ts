@@ -14,13 +14,13 @@ import {
 export const createComment = catchReqAsync(async (req, res, next) => {
   req.body.userId = req.userInTeam?.id;
   req.body.taskId = req.params.taskId;
-
+  const teamId = req.params.teamId;
   const data = ValidateInput(req.body, createCommentSchema);
 
   data.attachedFile = data.attachedFile
     ? imagePathExtender(data.attachedFile, req.params.teamId + "/comments")
     : undefined;
-  const comment = await commentService.createComment(data);
+  const comment = await commentService.createComment(data, teamId);
 
   if (data.attachedFile) {
     await fileuploader(req.file, data.attachedFile);
@@ -34,7 +34,7 @@ export const createComment = catchReqAsync(async (req, res, next) => {
 
 export const updateComment = catchReqAsync(async (req, res, next) => {
   const commentId = req.params.commentId;
-
+  const teamId = req.params.teamId;
   const data = ValidateInput(req.body, updateCommentSchema);
 
   let oldComment;
@@ -50,7 +50,8 @@ export const updateComment = catchReqAsync(async (req, res, next) => {
   const newComment = await commentService.updateComment(
     data,
     commentId,
-    req.userInTeam?.id as string
+    req.userInTeam?.id as string,
+    teamId
   );
 
   if (data.attachedFile) {
@@ -67,9 +68,11 @@ export const updateComment = catchReqAsync(async (req, res, next) => {
 });
 
 export const deleteComment = catchReqAsync(async (req, res, next) => {
+  const teamId = req.params.teamId;
   const comment = await commentService.deleteComment(
     req.params.commentId,
-    req.userInTeam?.id as string
+    req.userInTeam?.id as string,
+    teamId
   );
 
   if (comment.attachedFile) {

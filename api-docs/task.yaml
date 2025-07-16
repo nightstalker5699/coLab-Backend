@@ -182,7 +182,89 @@ paths:
           $ref: "#/components/responses/UnprocessableEntity"
         "500":
           $ref: "#/components/responses/InternalServerError"
+
   /api/teams/{teamId}/tasks/{taskId}:
+    get:
+      summary: Get a specific task
+      description: Retrieves a specific task by its ID within a team
+      operationId: getTask
+      tags:
+        - Tasks
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          description: The unique identifier of the team
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+        - name: taskId
+          in: path
+          required: true
+          description: The unique identifier of the task
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174003"
+      responses:
+        "200":
+          description: Task retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  data:
+                    type: object
+                    properties:
+                      task:
+                        allOf:
+                          - $ref: "#/components/schemas/Task"
+                          - type: object
+                            properties:
+                              forMe:
+                                type: boolean
+                                description: Indicates if the task is assigned to the current user
+                                example: true
+                              comments:
+                                type: array
+                                description: Comments associated with the task
+                                items:
+                                  type: object
+                                  properties:
+                                    id:
+                                      type: string
+                                      format: uuid
+                                    content:
+                                      type: string
+                                    createdAt:
+                                      type: string
+                                      format: date-time
+                              taskCategory:
+                                type: object
+                                nullable: true
+                                description: Category information for the task
+                                properties:
+                                  id:
+                                    type: string
+                                    format: uuid
+                                  name:
+                                    type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
     patch:
       summary: Update a task
       description: Updates an existing task within a team. Requires LEADER or OWNER permissions.

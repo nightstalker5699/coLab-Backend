@@ -40,6 +40,7 @@ router
   .get(checkId("teamId"), doesHeBelong, getTeam)
   .patch(
     checkId("teamId"),
+    addToReq("teamId", client.team, "team"),
     doesHeBelong,
     requirePermission("OWNER"),
     imageHandle.single("teamLogo"),

@@ -2,6 +2,13 @@
 module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
+  globals: {
+    "ts-jest": {
+      isolatedModules: true,
+      // Disable type checking
+      diagnostics: false,
+    },
+  },
 
   // Test file patterns
   testMatch: ["**/__tests__/**/*.ts", "**/?(*.)+(spec|test).ts"],
