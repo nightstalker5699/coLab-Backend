@@ -111,17 +111,6 @@ export class taskService {
         id: taskId,
       },
       data,
-      include: {
-        assignedBy: {
-          select: {
-            user: {
-              select: {
-                username: true,
-              },
-            },
-          },
-        },
-      },
     });
     const key = cacheService.genereteKey("teams", updatedTask.teamId, "tasks");
     await cacheService.del(`${key}:${updatedTask.id}`);

@@ -20,9 +20,7 @@ services:
     ports:
       - "6379:6379"
   frontend:
-    build:
-      context: ../COLAB
-      dockerfile: dockerfile.dev
+    image: front/test
     ports:
       - "3000:3000"
     # depends_on:
