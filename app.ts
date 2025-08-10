@@ -34,6 +34,7 @@ app.use(cookieParser());
 
 // app.use(validateSession); // Middleware to validate user session
 app.use("/api", authRouter);
+
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(protect);
