@@ -54,6 +54,7 @@ export class taskService {
           taskName: true,
           taskDescription: true,
           taskDeadline: true,
+          attachedFile: true,
           assignedBy: {
             select: {
               user: {
