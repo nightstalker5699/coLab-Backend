@@ -24,7 +24,7 @@ export const signup = catchReqAsync(async (req, res, next) => {
 
 export const githubSignin = new githubStrategy(
   {
-    clientID: "Ov23lisZTtclht3OpkoN",
+    clientID: process.env.GITHUB_CLIENT_ID || "",
     clientSecret: process.env.GITHUB_CLIENT_SECRET || "",
     callbackURL: process.env.GITHUB_REDIRECT_URI || "",
     passReqToCallback: true,

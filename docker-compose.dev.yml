@@ -6,7 +6,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: dockerfile.dev
     ports:
       - "8000:8000"
     volumes:
@@ -20,7 +20,9 @@ services:
     ports:
       - "6379:6379"
   frontend:
-    image: front/test
+    build:
+      context: ../CoLab
+      dockerfile: dockerfile.dev
     ports:
       - "3000:3000"
     # depends_on:
