@@ -3,9 +3,7 @@ import { z } from "zod";
 
 export const createTaskSchema = z.object({
   taskName: z.string().max(50, "you can't use more than 50 characters"),
-  taskDescription: z
-    .string()
-    .max(255, "you can't use more than 255 characters"),
+  taskDescription: z.string(),
   taskDeadline: z.coerce
     .date()
     .min(new Date(Date.now()), "you must set deadline later than this"),

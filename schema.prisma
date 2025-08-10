@@ -108,7 +108,7 @@ model TaskCategory {
 model Task {
   id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   taskName        String   @db.VarChar(50)
-  taskDescription String   @db.VarChar(255)
+  taskDescription String   
   taskDeadline    DateTime
   attachedFile    String?  @db.VarChar(150)
   taskStatus      Status   @default(ISSUED)
