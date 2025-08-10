@@ -40,7 +40,8 @@ export default class TeamService {
         role: "OWNER",
       },
     });
-
+    const key = cacheService.genereteKey("teams", "users", user.id);
+    cacheService.del(key);
     return team;
   }
   static async getTeam(
@@ -116,7 +117,12 @@ export default class TeamService {
     const relation = await client.userInTeam.createMany({
       data: members,
     });
-    await cacheService.del(key);
+    cacheService.del(key);
+    members.forEach((user) => {
+      const key = cacheService.genereteKey("teams", "users", user.userId);
+      cacheService.del(key);
+    });
+
     return relation;
   }
 
@@ -147,9 +153,11 @@ export default class TeamService {
       "relations",
       relation.userId
     );
-    await cacheService.del(key);
+    const userViewKey = cacheService.genereteKey("teams", "users", user.id);
 
-    await cacheService.set(setKey, relation);
+    cacheService.del(key);
+    cacheService.del(userViewKey);
+    cacheService.set(setKey, relation);
     return relation;
   }
 
@@ -181,8 +189,9 @@ export default class TeamService {
       },
     });
     const key = cacheService.genereteKey("teams", userTeam.teamId);
-
+    const userKey = cacheService.genereteKey("teams", "users", userTeam.userId);
     await cacheService.delPattern(`${key}*`);
+    await cacheService.del(userKey);
     return userTeam;
   }
 
