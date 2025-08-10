@@ -139,6 +139,8 @@ export default class TeamService {
         "ValidationError"
       );
     }
+    console.log(user.id);
+    console.log(team.id);
     const relation: IUserInTeam = await client.userInTeam.create({
       data: {
         userId: user.id,
