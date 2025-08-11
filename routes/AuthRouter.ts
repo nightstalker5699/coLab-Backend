@@ -7,7 +7,7 @@ import { imageHandle } from "../helpers/image.handle";
 const router = express.Router();
 
 // local authentication
-router.post("/login", authhandler("local"));
+router.post("/login", imageHandle.none(), authhandler("local"));
 router.post("/signup", imageHandle.single("photo"), signup);
 
 // google authentication
