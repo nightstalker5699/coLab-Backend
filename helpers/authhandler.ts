@@ -40,7 +40,13 @@ export const authhandler = (authType: string) => {
         return next(auth);
       }
       await loginAsync(req, auth as IUser);
-      res.redirect(process.env.FRONTEND_URL || "http://localhost:3000");
+      if (req.query.type === "frontend") {
+        res.status(200).json({
+          status: "success",
+        });
+      } else {
+        res.redirect(process.env.FRONTEND_URL || "http://localhost:3000");
+      }
     }
   );
 };

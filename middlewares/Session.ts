@@ -45,7 +45,7 @@ export const sessionDeleter = async (userId: string) => {
     const sessionData = await redisClient.get(key);
     if (sessionData) {
       const session = JSON.parse(sessionData);
-      if (session.passport && session.passport.user === userId) {
+      if (session.passport && session.passport.user.id === userId) {
         await redisClient.del(key);
       }
     }

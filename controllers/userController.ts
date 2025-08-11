@@ -40,7 +40,7 @@ export const getUser = catchReqAsync(async (req, res, next) => {
 
 export const updateMe = catchReqAsync(async (req, res, next) => {
   const data = ValidateInput(req.body, updateUserSchema);
-
+  let newpass = new String(data.newpassword);
   const userObj: IUser = await userService.updateUser(req.user as IUser, data);
 
   if (req.user?.photo !== userObj.photo) {
@@ -48,7 +48,8 @@ export const updateMe = catchReqAsync(async (req, res, next) => {
     if (req.user?.photo !== default_photo)
       await fileRemover(req.user?.photo as string);
   }
-  if (data.newpassword) {
+
+  if (newpass) {
     sessionDeleter(req.user?.id as string);
   }
   await loginAsync(req, userObj);
