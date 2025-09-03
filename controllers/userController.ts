@@ -40,11 +40,20 @@ export const getUser = catchReqAsync(async (req, res, next) => {
 
 export const updateMe = catchReqAsync(async (req, res, next) => {
   const data = ValidateInput(req.body, updateUserSchema);
-  let newpass = new String(data.newpassword);
-  const userObj: IUser = await userService.updateUser(req.user as IUser, data);
 
-  if (req.user?.photo !== userObj.photo) {
-    await fileuploader(req.file, req.body.photo);
+  let newpass = new String(data.newpassword);
+
+  const user = await userService.getUser({
+    where: { id: req.user?.id },
+    omit: {
+      password: false,
+    },
+  });
+
+  const userObj: IUser = await userService.updateUser(user, data);
+
+  if (data.photo) {
+    await fileuploader(req.file, data.photo);
     if (req.user?.photo !== default_photo)
       await fileRemover(req.user?.photo as string);
   }
