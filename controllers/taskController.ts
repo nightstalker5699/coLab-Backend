@@ -8,11 +8,12 @@ import {
 import {
   changeStatusSchema,
   createTaskSchema,
-  taskFilterSchema,
+  queryParams,
   updateTaskSchema,
 } from "../types/taskTypes";
 import { taskService } from "../services/task.service";
 import { tasksFormatter } from "../helpers/objectFormatter";
+import { querybuilder } from "../helpers/queryBuilder";
 
 export const createTask = catchReqAsync(async (req, res, next) => {
   req.body.teamId = req.userInTeam?.teamId;
@@ -35,24 +36,26 @@ export const createTask = catchReqAsync(async (req, res, next) => {
 });
 
 export const getTasks = catchReqAsync(async (req, res, next) => {
-  // 1. Auto-inject teamId from authenticated user
-  const query = {
-    ...req.query,
-    teamId: req.params.teamId,
-  };
-  // 2. Validate input with schema
-  const data = ValidateInput(query, taskFilterSchema);
+  const query = req.query;
 
-  // 3. Get tasks from service layer
-  const semiTasks = await taskService.getTasks(data, JSON.stringify(req.query));
+  const data = ValidateInput(query, queryParams);
 
-  // 4. Format tasks (likely your grouping logic)
+  const result = await querybuilder("task", data, ["teamId"]);
+
+  result.dbQuery.where["teamId"] = req.userInTeam?.teamId;
+
+  const semiTasks = await taskService.getTasks(
+    req.userInTeam?.teamId as string,
+    result.dbQuery,
+    JSON.stringify(result.dbQuery)
+  );
+
   const tasks = tasksFormatter(semiTasks, req.userInTeam?.id as string);
 
-  // 5. Return formatted response
   return res.status(200).json({
     status: "success",
     data: { tasks },
+    maxPage: result.maxPage,
   });
 });
 

@@ -116,4 +116,30 @@ export default class UserService {
     });
     return updated;
   }
+
+  static async getStats(userId: string) {
+    const teams = await client.userInTeam.findMany({
+      where: {
+        userId,
+      },
+    });
+    const tasks = await client.task.count({
+      where: {
+        assignedToId: { in: teams.map((team) => team.id) },
+        taskStatus: { not: "DONE" },
+      },
+    });
+    const teamMates = await client.userInTeam.count({
+      where: {
+        userId: { not: userId },
+        teamId: { in: teams.map((team) => team.teamId) },
+      },
+    });
+
+    return {
+      teamJoined: teams.length,
+      activeTask: tasks,
+      teamMembers: teamMates,
+    };
+  }
 }

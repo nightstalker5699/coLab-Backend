@@ -1,11 +1,7 @@
 import client from "../middlewares/prisma/user.middleware";
 import appError from "../helpers/appError";
-
-import {
-  createTaskType,
-  taskFilterType,
-  updateTaskType,
-} from "../types/taskTypes";
+import { Prisma } from "@prisma/client";
+import { createTaskType, updateTaskType } from "../types/taskTypes";
 import { cacheService } from "./cache.service";
 import { ITask } from "../types/entitiesTypes";
 const taskClient = client.task;
@@ -35,17 +31,21 @@ export class taskService {
     return task;
   }
 
-  static async getTasks(where: taskFilterType, query: string) {
+  static async getTasks(
+    teamId: string,
+    dbQuery: Prisma.TaskFindManyArgs,
+    query: string
+  ) {
     const key = cacheService.genereteKey(
       "teams",
-      where.teamId,
+      teamId,
       "tasks",
       "all",
       query
     );
     const data = await cacheService.getOrSet(key, async () => {
       return await taskClient.findMany({
-        where,
+        ...dbQuery,
         select: {
           id: true,
           taskPriority: true,
@@ -65,9 +65,6 @@ export class taskService {
             },
           },
           assignedToId: true,
-        },
-        orderBy: {
-          createdAt: "asc",
         },
       });
     });

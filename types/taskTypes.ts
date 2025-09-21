@@ -18,10 +18,11 @@ export const createTaskSchema = z.object({
   teamId: z.string().uuid(),
 });
 
-export const taskFilterSchema = z.object({
-  taskCategoryId: z.string().uuid().optional(),
-  assignedToId: z.string().uuid().optional(),
-  teamId: z.string().uuid(),
+export const queryParams = z.object({
+  filter: z.string().optional(),
+  sort: z.string().optional(),
+  page: z.number().optional(),
+  size: z.number().optional(),
 });
 
 export const updateTaskSchema = z.object({
@@ -49,7 +50,7 @@ export const changeStatusSchema = z.object({
 
 export type createTaskType = z.infer<typeof createTaskSchema>;
 
-export type taskFilterType = z.infer<typeof taskFilterSchema>;
+export type queryParamsType = z.infer<typeof queryParams>;
 
 export type updateTaskType = z.infer<typeof updateTaskSchema>;
 

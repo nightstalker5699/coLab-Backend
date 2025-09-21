@@ -38,6 +38,22 @@ export const getUser = catchReqAsync(async (req, res, next) => {
   });
 });
 
+export const getUsers = catchReqAsync(async (req, res, next) => {
+  const username = req.query.username;
+  if (!username) {
+    return next(
+      new appError("you must insert characters", 400, "ValidationError")
+    );
+  }
+  const users: partialUser[] = await userService.getUsersName(
+    username as string
+  );
+
+  res.json({
+    status: "sucess",
+    data: users,
+  });
+});
 export const updateMe = catchReqAsync(async (req, res, next) => {
   const data = ValidateInput(req.body, updateUserSchema);
 
@@ -122,19 +138,11 @@ export const deleteUser = catchReqAsync(async (req, res, next) => {
   });
 });
 
-export const getUsers = catchReqAsync(async (req, res, next) => {
-  const username = req.query.username;
-  if (!username) {
-    return next(
-      new appError("you must insert characters", 400, "ValidationError")
-    );
-  }
-  const users: partialUser[] = await userService.getUsersName(
-    username as string
-  );
+export const getStats = catchReqAsync(async (req, res, next) => {
+  const stats = await userService.getStats(req.user?.id as string);
 
-  res.json({
-    status: "sucess",
-    data: users,
+  res.status(200).json({
+    status: "success",
+    data: stats,
   });
 });

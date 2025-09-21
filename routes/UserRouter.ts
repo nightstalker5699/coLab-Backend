@@ -6,6 +6,7 @@ import {
   getMe,
   getUser,
   getUsers,
+  getStats,
 } from "../controllers/userController";
 
 import { Router } from "express";
@@ -28,4 +29,7 @@ UserRouter.route("/:username")
     updateUser
   )
   .delete(restrictTo("ADMIN"), deleteUser);
+
+UserRouter.route("/me/stats").get(getStats);
+
 export default UserRouter;
